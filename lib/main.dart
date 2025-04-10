@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ChatGPT 模擬器',
+      title: 'AI Meme Suggester',
       home: const MainScreen(), // 主畫面
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
