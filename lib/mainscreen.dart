@@ -1,12 +1,13 @@
+// main_screen.dart (Updated)
 import 'package:flutter/material.dart';
+import 'package:software_studio_final/models/settings.dart';
+import 'package:software_studio_final/widgets/customDrawer.dart';
+import 'package:software_studio_final/widgets/favorite.dart'; // Keep widget imports here if MainScreen navigates
 import 'package:software_studio_final/widgets/settings.dart';
 import 'package:software_studio_final/widgets/trending.dart';
-// Keep your existing imports
-// import 'mygo_folder.dart';
-// import 'your_pictures_folder.dart';
-// import 'mygogarbage_folder.dart';
-// import 'yourpicturegarbage_folder.dart';
-import 'widgets/favorite.dart';
+
+// Import the new custom drawer
+import 'widgets/customDrawer.dart'; // Adjust path if needed
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,41 +17,58 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // --- Add GlobalKey for Scaffold ---
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final TextEditingController _textController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = []; // 儲存訊息列表
-  // Example initial history for testing
+  final List<Map<String, dynamic>> _messages = [];
   final List<List<Map<String, dynamic>>> _chatHistory = [
+    // ... (keep your example history)
     [
       {'isUser': true, 'content': 'Old message 1'},
-    ],
-    [
       {
         'isUser': false,
-        'content': ['assets/images/image1.jpg'],
+        'content': ['assets/images/image1.jpg', 'assets/images/image2.jpg'],
       },
     ],
+    [
+      {'isUser': true, 'content': 'Another chat'},
+    ],
   ];
-  final Set<String> _likedImages = {}; // 儲存被點擊愛心的圖片路徑
-  bool _showGoButton = false; // 控制 GO 按鈕的顯示
-  bool _hideButtons = false; // 控制加號和 GO 按鈕的隱藏
-  bool _showSourceAndFolders = true; // 控制 Source 和資料夾按鈕的顯示
+  final Set<String> _likedImages = {};
+  bool _showGoButton = false;
+  bool _hideButtons = false;
 
   // 新增狀態變數來控制 Checkbox 的選中狀態
   bool _isAllSelected = false;
   bool _isMygoSelected = false;
   bool _isFavoriteSelected = false;
 
+  // 新增變數來控制 Checkbox 的顯示
+  bool _showCheckboxes = true;
+
+  // --- Navigation Methods (remain in MainScreen as they use its context) ---
   void _goToSettings() {
+    Navigator.pop(context); // Close drawer before navigating
+    Settings initSettings = Settings(
+      optionNumbers: 3,
+      myFavorite: true,
+      hiddenPictures: false,
+      privacyPolicy: true,
+      isDarkTheme: false,
+    );
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsPage()),
+      MaterialPageRoute(
+        builder: (context) => SettingsPage(
+          initSettings: initSettings,
+          onChanged: (Settings settings) {},
+        ),
+      ),
     );
   }
 
   void _goToFavorite() {
+    Navigator.pop(context); // Close drawer before navigating
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => FavoritePage()),
@@ -58,22 +76,47 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _goToTrending() {
+    Navigator.pop(context); // Close drawer before navigating
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TrendingPage()),
     );
   }
 
-  // --- Your existing methods (_onSendPressed, _onUploadPressed, _onGoPressed, _toggleLike, _onNewChatPressed) remain the same ---
+  // --- Method to handle history item selection ---
+  void _handleHistorySelection(int index) {
+    if (index < 0 || index >= _chatHistory.length) return; // Bounds check
+
+    setState(() {
+      _messages.clear();
+      // Deep copy the selected history to the current messages
+      // Ensure content lists are also copied if they exist
+      _messages.addAll(
+        _chatHistory[index].map((msg) {
+          final newMsg = Map<String, dynamic>.from(msg);
+          if (newMsg['content'] is List) {
+            newMsg['content'] = List.from(newMsg['content']);
+          }
+          return newMsg;
+        }),
+      );
+
+      // Reset UI state when loading history
+      _textController.clear();
+      _likedImages.clear(); // Clear likes for the new chat context
+      _showGoButton = false;
+      _hideButtons = false; // Show input buttons again
+    });
+    // Note: Navigator.pop(context) is called within the CustomDrawer's onTap
+  }
+
+  // --- Other methods (_onSendPressed, _onUploadPressed, etc.) remain the same ---
   void _onSendPressed() {
     final userInput = _textController.text.trim();
     if (userInput.isNotEmpty) {
       setState(() {
-        // 使用者的訊息
         _messages.add({'isUser': true, 'content': userInput});
         _textController.clear();
-
-        // AI 的回應（模擬回傳五張圖片）
         _messages.add({
           'isUser': false,
           'content': [
@@ -84,30 +127,24 @@ class _MainScreenState extends State<MainScreen> {
             'assets/images/image5.jpg',
           ],
         });
-        // Reset flags if needed when sending text
         _showGoButton = false;
         _hideButtons = false;
-        _showSourceAndFolders = true;
       });
     }
   }
 
   void _onUploadPressed() {
-    // 模擬上傳圖片的功能
     setState(() {
       _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
-      _showGoButton = true; // 顯示 GO 按鈕
-      _hideButtons = true; // Hide add button immediately
-      _showSourceAndFolders = true; // Keep folders visible initially if needed
+      _showGoButton = true;
+      _hideButtons = true;
     });
   }
 
   void _onGoPressed() {
-    // 點擊 GO 按鈕後的行為
     setState(() {
-      _showGoButton = false; // 隱藏 GO 按鈕
-      _hideButtons = true; // 確保加號按鈕保持隱藏
-      _showSourceAndFolders = false; // 隱藏 Source 和資料夾按鈕
+      _showGoButton = false;
+      _hideButtons = true; // Keep add button hidden after GO
       _messages.add({
         'isUser': false,
         'content': [
@@ -122,223 +159,147 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _toggleLike(String imagePath) {
-    // 切換愛心按鈕的狀態
     setState(() {
       if (_likedImages.contains(imagePath)) {
-        _likedImages.remove(imagePath); // 移除愛心
+        _likedImages.remove(imagePath);
       } else {
-        _likedImages.add(imagePath); // 添加愛心
+        _likedImages.add(imagePath);
       }
     });
   }
 
   void _onNewChatPressed() {
-    // 創建新的對話
     setState(() {
       if (_messages.isNotEmpty) {
-        // Deep copy the messages to avoid modifying history later
+        // Deep copy necessary to prevent modification issues
         _chatHistory.add(
           List<Map<String, dynamic>>.from(
-            _messages.map((m) => Map<String, dynamic>.from(m)),
+            _messages.map((m) {
+              final newMsg = Map<String, dynamic>.from(m);
+              if (newMsg['content'] is List) {
+                newMsg['content'] = List.from(
+                  newMsg['content'],
+                ); // Deep copy list content too
+              }
+              return newMsg;
+            }),
           ),
         );
       }
-      _messages.clear(); // 清空當前聊天
-      _textController.clear(); // Clear text field
-      _likedImages.clear(); // Clear likes
+      _messages.clear();
+      _textController.clear();
+      _likedImages.clear();
       _showGoButton = false;
       _hideButtons = false;
-      _showSourceAndFolders = true; // 顯示 Source 和資料夾按鈕
     });
-  }
-
-  // --- MODIFIED: This method now opens the Drawer ---
-  void _onHistoryPressed() {
-    // Use the GlobalKey to open the drawer
-    _scaffoldKey.currentState?.openDrawer();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageSize = screenWidth * 0.4; // 圖片寬度為螢幕寬度的 40%
-
+    final imageSize = screenWidth * 0.4;
     ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      // --- Assign the key to the Scaffold ---
       key: _scaffoldKey,
-
       appBar: AppBar(
         backgroundColor: theme.colorScheme.secondaryContainer,
         title: const Text("AI Meme Suggestion"),
         actions: [
-          // --- Add a History Button to trigger _onHistoryPressed ---
           IconButton(
-            icon: const Icon(Icons.edit), // 右上角按鈕（筆形狀）
+            icon: const Icon(Icons.edit),
             tooltip: '新增對話',
             onPressed: _onNewChatPressed,
           ),
         ],
       ),
 
-      // --- Your Drawer code (looks correct) ---
-      drawer: Drawer(
-        child: Column(
-          children: <Widget>[
-            Container(
-              child: const Column(
-                children: [
-                  SizedBox(height: 12),
-                  Text(
-                    'History',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                  SizedBox(height: 12),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                itemCount: _chatHistory.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(Icons.chat_bubble_outline),
-                    title: Text("對話 ${index + 1}"),
-                    onTap: () {
-                      setState(() {
-                        _messages.clear();
-                        // Make sure to deep copy if needed, though often reading is fine
-                        _messages.addAll(_chatHistory[index]);
-                        // Reset UI state when loading history
-                        _textController.clear();
-                        _likedImages.clear();
-                        _showGoButton = false;
-                        _hideButtons = false;
-                        _showSourceAndFolders = true;
-                      });
-                      Navigator.pop(context); // Close the drawer
-                    },
-                  );
-                },
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _goToTrending,
-                      label: Text('Trending'),
-                      icon: Icon(Icons.trending_up, size: 32),
-                      iconAlignment: IconAlignment.start,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        textStyle: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w200,
-                        ),
-                        // You can remove the alignment here as the Column's crossAxisAlignment will handle it
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _goToFavorite,
-                      label: Text('Favorite '),
-                      icon: Icon(Icons.favorite, size: 32),
-                      iconAlignment: IconAlignment.start,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        textStyle: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w200,
-                        ),
-                        // You can remove the alignment here as the Column's crossAxisAlignment will handle it
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _goToSettings,
-                      label: Text('Settings '),
-                      icon: Icon(Icons.settings, size: 32),
-                      iconAlignment: IconAlignment.start,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        textStyle: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w200,
-                        ),
-                        // You can remove the alignment here as the Column's crossAxisAlignment will handle it
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      // --- Use the new CustomDrawer ---
+      drawer: CustomDrawer(
+        chatHistory: _chatHistory, // Pass the history list
+        onHistoryItemSelected: _handleHistorySelection, // Pass the handler method
+        onGoToTrending: _goToTrending, // Pass navigation methods
+        onGoToFavorite: _goToFavorite,
+        onGoToSettings: _goToSettings,
       ),
 
-      // --- Your Body code (Stack with Column, input field, etc.) ---
-      // --- (Keep your existing body code here) ---
+      // --- Body remains the same ---
       body: Stack(
         children: [
           Column(
             children: [
-              // 新增 Checkbox 區域
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // ALL Checkbox
-                    Column(
-                      children: [
-                        const Text('ALL'),
-                        Checkbox(
-                          value: _isAllSelected,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _isAllSelected = value ?? false;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 20),
-                    // MYGO Checkbox
-                    Column(
-                      children: [
-                        const Text('MYGO'),
-                        Checkbox(
-                          value: _isMygoSelected,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _isMygoSelected = value ?? false;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 20),
-                    // FAVORITE Checkbox
-                    Column(
-                      children: [
-                        const Text('FAVORITE'),
-                        Checkbox(
-                          value: _isFavoriteSelected,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _isFavoriteSelected = value ?? false;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+              // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
+              if (_showCheckboxes)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ALL Checkbox
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Text('ALL'),
+                              const SizedBox(width: 8), // 增加文字與圖標的間距
+                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                            ],
+                          ),
+                          Checkbox(
+                            value: _isAllSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isAllSelected = value ?? false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+                      // MYGO Checkbox
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Text('MYGO'),
+                              const SizedBox(width: 8), // 增加文字與圖標的間距
+                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                            ],
+                          ),
+                          Checkbox(
+                            value: _isMygoSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isMygoSelected = value ?? false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+                      // FAVORITE Checkbox
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Text('FAVORITE'),
+                              const SizedBox(width: 8), // 增加文字與圖標的間距
+                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                            ],
+                          ),
+                          Checkbox(
+                            value: _isFavoriteSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isFavoriteSelected = value ?? false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               // 訊息列表
               Expanded(
                 child: ListView.builder(
@@ -346,7 +307,7 @@ class _MainScreenState extends State<MainScreen> {
                   itemBuilder: (context, index) {
                     final message = _messages[index];
                     if (message['isUser']) {
-                      // User message
+                      // User message bubble
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           vertical: 4.0,
@@ -357,15 +318,11 @@ class _MainScreenState extends State<MainScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12.0),
                             decoration: BoxDecoration(
-                              color:
-                                  theme
-                                      .colorScheme
-                                      .primaryContainer, // Use theme color
+                              color: theme.colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              message['content']
-                                  .toString(), // Handle text/upload confirmation
+                              message['content'].toString(),
                               style: TextStyle(
                                 fontSize: 16,
                                 color: theme.colorScheme.onPrimaryContainer,
@@ -376,11 +333,9 @@ class _MainScreenState extends State<MainScreen> {
                       );
                     } else {
                       // AI response (images)
-                      // Ensure content is a List<String>
-                      final imagePaths =
-                          (message['content'] is List)
-                              ? List<String>.from(message['content'])
-                              : <String>[]; // Handle potential type errors
+                      final imagePaths = (message['content'] is List)
+                          ? List<String>.from(message['content'])
+                          : <String>[];
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(
@@ -388,79 +343,61 @@ class _MainScreenState extends State<MainScreen> {
                           horizontal: 8.0,
                         ),
                         child: Align(
-                          // Align the whole block left
                           alignment: Alignment.centerLeft,
                           child: Container(
-                            // Optional: Add background for AI messages
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color:
-                                  theme
-                                      .colorScheme
-                                      .surfaceContainerHighest, // Use theme color
+                              color: theme.colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Wrap(
-                              // Use Wrap for better layout if many images
-                              spacing: 8.0, // Horizontal space between items
-                              runSpacing: 8.0, // Vertical space between lines
-                              children:
-                                  imagePaths.map((imagePath) {
-                                    return Column(
-                                      // Column for image and button
-                                      mainAxisSize:
-                                          MainAxisSize
-                                              .min, // Take minimum space
-                                      children: [
-                                        Image.asset(
-                                          imagePath,
+                              spacing: 8.0,
+                              runSpacing: 8.0,
+                              children: imagePaths.map((imagePath) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Image.asset(
+                                      imagePath,
+                                      width: imageSize,
+                                      height: imageSize,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return Container(
+                                          // Placeholder on error
                                           width: imageSize,
                                           height: imageSize,
-                                          fit:
-                                              BoxFit.cover, // Or BoxFit.contain
-                                          errorBuilder: (
-                                            context,
-                                            error,
-                                            stackTrace,
-                                          ) {
-                                            // Handle image load errors
-                                            return Container(
-                                              width: imageSize,
-                                              height: imageSize,
-                                              color: Colors.grey[300],
-                                              child: Icon(
-                                                Icons.broken_image,
-                                                color: Colors.grey[600],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            _likedImages.contains(imagePath)
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color:
-                                                _likedImages.contains(imagePath)
-                                                    ? Colors
-                                                        .pinkAccent // Use a more vibrant pink
-                                                    : Colors.grey,
-                                            size: 24, // Adjust size if needed
+                                          color: Colors.grey[300],
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey[600],
                                           ),
-                                          visualDensity:
-                                              VisualDensity
-                                                  .compact, // Reduce padding around icon
-                                          padding:
-                                              EdgeInsets
-                                                  .zero, // Remove default padding
-                                          constraints:
-                                              BoxConstraints(), // Remove default constraints
-                                          onPressed:
-                                              () => _toggleLike(imagePath),
-                                        ),
-                                      ],
-                                    );
-                                  }).toList(),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      // Like button
+                                      icon: Icon(
+                                        _likedImages.contains(imagePath)
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: _likedImages.contains(imagePath)
+                                            ? Colors.pinkAccent
+                                            : Colors.grey,
+                                        size: 24,
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () => _toggleLike(imagePath),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
                             ),
                           ),
                         ),
@@ -469,7 +406,7 @@ class _MainScreenState extends State<MainScreen> {
                   },
                 ),
               ),
-              // 打字框
+              // Input Field Area
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -480,23 +417,17 @@ class _MainScreenState extends State<MainScreen> {
                         decoration: InputDecoration(
                           hintText: "輸入提示...",
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              24,
-                            ), // More rounded
-                            borderSide: BorderSide.none, // Remove border line
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
                           ),
-                          filled: true, // Add fill color
-                          fillColor:
-                              theme
-                                  .colorScheme
-                                  .surfaceVariant, // Use theme color
-                          contentPadding: EdgeInsets.symmetric(
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant,
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 14,
                           ),
                         ),
-                        onSubmitted:
-                            (_) => _onSendPressed(), // Send on keyboard done
+                        onSubmitted: (_) => _onSendPressed(),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -511,58 +442,55 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ],
           ),
-          // Central GO button
+          // Central GO button (conditionally shown)
           if (_showGoButton)
             Positioned.fill(
-              // Use Positioned.fill to easily center
               child: Container(
-                color: Colors.black.withOpacity(
-                  0.1,
-                ), // Optional: Dim background
+                color: Colors.black.withOpacity(0.1),
                 child: Center(
                   child: ElevatedButton(
-                    onPressed: _onGoPressed,
+                    onPressed: () {
+                      setState(() {
+                        _showCheckboxes = false; // 隱藏 Checkbox
+                        _onGoPressed(); // 執行進入對話的邏輯
+                      });
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orangeAccent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          30,
-                        ), // Adjust rounding
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 64,
-                        vertical: 24, // Reduced vertical padding slightly
+                        vertical: 24,
                       ),
                     ),
                     child: Text(
                       "GO!",
                       style: TextStyle(
-                        fontSize: 36, // Slightly smaller
+                        fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color:
-                            theme
-                                .colorScheme
-                                .onTertiaryContainer, // Adjust color if needed
+                        color: theme.colorScheme.onTertiaryContainer,
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          // Top-left Add button and text
+          // Top-left Add button and text (conditionally shown)
           if (!_hideButtons)
             Positioned(
-              top: 20, // Adjust position as needed
+              top: 20,
               left: 20,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
+                    // Decorated Add button
                     decoration: BoxDecoration(
                       color: Colors.orangeAccent,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        // Add shadow for depth
                         BoxShadow(
                           color: Colors.black.withOpacity(0.2),
                           blurRadius: 4,
@@ -572,22 +500,18 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                     child: IconButton(
                       onPressed: _onUploadPressed,
-                      color:
-                          theme
-                              .colorScheme
-                              .onTertiaryContainer, // Adjust if needed
-                      icon: Icon(
-                        Icons.add_photo_alternate_outlined,
-                      ), // More relevant icon
-                      iconSize: 36, // Adjust size
-                      padding: EdgeInsets.all(12), // Adjust padding
+                      color: theme.colorScheme.onTertiaryContainer,
+                      icon: const Icon(Icons.add_photo_alternate_outlined),
+                      iconSize: 36,
+                      padding: const EdgeInsets.all(12),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   SizedBox(
-                    width: screenWidth * 0.6, // Adjust width relative to screen
+                    // Context text
+                    width: screenWidth * 0.6,
                     child: Text(
-                      'Upload screenshots to provide context!', // Clearer text
+                      'Upload screenshots to provide context!',
                       style: TextStyle(
                         fontSize: 15,
                         color: theme.colorScheme.onSurface.withOpacity(0.8),
