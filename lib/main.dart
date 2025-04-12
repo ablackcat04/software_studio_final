@@ -25,8 +25,8 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Colors.white),
           // Customize other text styles for dark mode
         ),
-        // themeMode: ThemeMode.system,
       ),
+      // themeMode: ThemeMode.system,
     );
   }
 }

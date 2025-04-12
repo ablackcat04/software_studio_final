@@ -37,31 +37,6 @@ class _SettingsPageState extends State<SettingsPage> {
         body: ListView(
           children: [
             ListTile(
-              title: Text('Option Numbers'),
-              trailing: SizedBox(
-                width: 60,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                  ),
-                  onChanged: (String value) {
-                    final int? newValue = int.tryParse(value);
-                    if (newValue != null) {
-                      Settings newSettings = settings.copyWith(
-                        optionNumbers: newValue,
-                      );
-                      setState(() {
-                        settings = newSettings;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
-            ListTile(
               title: Text('My Favorite'),
               trailing: Switch(
                 value: settings.myFavorite,
@@ -111,6 +86,32 @@ class _SettingsPageState extends State<SettingsPage> {
                   });
                   widget.onChanged(newSettings);
                 },
+              ),
+            ),
+            ListTile(
+              title: Text('Option Numbers'),
+              trailing: SizedBox(
+                width: 60,
+                child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  initialValue: settings.optionNumbers.toString(),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                  ),
+                  onChanged: (String value) {
+                    final int? newValue = int.tryParse(value);
+                    if (newValue != null) {
+                      Settings newSettings = settings.copyWith(
+                        optionNumbers: newValue,
+                      );
+                      setState(() {
+                        settings = newSettings;
+                      });
+                    }
+                  },
+                ),
               ),
             ),
           ],
