@@ -1,5 +1,6 @@
 // main_screen.dart (Updated)
 import 'package:flutter/material.dart';
+import 'package:software_studio_final/models/settings.dart';
 import 'package:software_studio_final/widgets/customDrawer.dart';
 import 'package:software_studio_final/widgets/favorite.dart'; // Keep widget imports here if MainScreen navigates
 import 'package:software_studio_final/widgets/settings.dart';
@@ -40,9 +41,22 @@ class _MainScreenState extends State<MainScreen> {
   // --- Navigation Methods (remain in MainScreen as they use its context) ---
   void _goToSettings() {
     Navigator.pop(context); // Close drawer before navigating
+    Settings initSettings = Settings(
+      optionNumbers: 3,
+      myFavorite: true,
+      hiddenPictures: false,
+      privacyPolicy: true,
+      isDarkTheme: false,
+    );
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsPage()),
+      MaterialPageRoute(
+        builder:
+            (context) => SettingsPage(
+              initSettings: initSettings,
+              onChanged: (Settings settings) {},
+            ),
+      ),
     );
   }
 
