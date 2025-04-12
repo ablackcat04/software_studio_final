@@ -38,6 +38,11 @@ class _MainScreenState extends State<MainScreen> {
   bool _hideButtons = false; // 控制加號和 GO 按鈕的隱藏
   bool _showSourceAndFolders = true; // 控制 Source 和資料夾按鈕的顯示
 
+  // 新增狀態變數來控制 Checkbox 的選中狀態
+  bool _isAllSelected = false;
+  bool _isMygoSelected = false;
+  bool _isFavoriteSelected = false;
+
   void _goToSettings() {
     Navigator.push(
       context,
@@ -281,6 +286,59 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Column(
             children: [
+              // 新增 Checkbox 區域
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ALL Checkbox
+                    Column(
+                      children: [
+                        const Text('ALL'),
+                        Checkbox(
+                          value: _isAllSelected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _isAllSelected = value ?? false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    // MYGO Checkbox
+                    Column(
+                      children: [
+                        const Text('MYGO'),
+                        Checkbox(
+                          value: _isMygoSelected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _isMygoSelected = value ?? false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    // FAVORITE Checkbox
+                    Column(
+                      children: [
+                        const Text('FAVORITE'),
+                        Checkbox(
+                          value: _isFavoriteSelected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _isFavoriteSelected = value ?? false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               // 訊息列表
               Expanded(
                 child: ListView.builder(
