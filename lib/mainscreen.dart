@@ -37,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
   final Set<String> _likedImages = {};
   bool _showGoButton = false;
   bool _hideButtons = false;
+  bool _showTextField = false;
 
   // 新增狀態變數來控制 Checkbox 的選中狀態
   bool _isAllSelected = false;
@@ -59,10 +60,11 @@ class _MainScreenState extends State<MainScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SettingsPage(
-          initSettings: initSettings,
-          onChanged: (Settings settings) {},
-        ),
+        builder:
+            (context) => SettingsPage(
+              initSettings: initSettings,
+              onChanged: (Settings settings) {},
+            ),
       ),
     );
   }
@@ -106,6 +108,8 @@ class _MainScreenState extends State<MainScreen> {
       _likedImages.clear(); // Clear likes for the new chat context
       _showGoButton = false;
       _hideButtons = false; // Show input buttons again
+      _showCheckboxes = false;
+      _hideButtons = true;
     });
     // Note: Navigator.pop(context) is called within the CustomDrawer's onTap
   }
@@ -128,7 +132,8 @@ class _MainScreenState extends State<MainScreen> {
           ],
         });
         _showGoButton = false;
-        _hideButtons = false;
+        _hideButtons = true;
+        _showCheckboxes = false;
       });
     }
   }
@@ -138,12 +143,14 @@ class _MainScreenState extends State<MainScreen> {
       _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
       _showGoButton = true;
       _hideButtons = true;
+      _showCheckboxes = true;
     });
   }
 
   void _onGoPressed() {
     setState(() {
       _showGoButton = false;
+      _showTextField = true;
       _hideButtons = true; // Keep add button hidden after GO
       _messages.add({
         'isUser': false,
@@ -191,6 +198,8 @@ class _MainScreenState extends State<MainScreen> {
       _likedImages.clear();
       _showGoButton = false;
       _hideButtons = false;
+      _showCheckboxes = true;
+      _showTextField = false;
     });
   }
 
@@ -217,7 +226,8 @@ class _MainScreenState extends State<MainScreen> {
       // --- Use the new CustomDrawer ---
       drawer: CustomDrawer(
         chatHistory: _chatHistory, // Pass the history list
-        onHistoryItemSelected: _handleHistorySelection, // Pass the handler method
+        onHistoryItemSelected:
+            _handleHistorySelection, // Pass the handler method
         onGoToTrending: _goToTrending, // Pass navigation methods
         onGoToFavorite: _goToFavorite,
         onGoToSettings: _goToSettings,
@@ -232,68 +242,82 @@ class _MainScreenState extends State<MainScreen> {
               if (_showCheckboxes)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
                     children: [
-                      // ALL Checkbox
-                      Column(
+                      SizedBox(height: 100),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Row(
+                          // ALL Checkbox
+                          Column(
                             children: [
-                              const Text('ALL'),
-                              const SizedBox(width: 8), // 增加文字與圖標的間距
-                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                              Row(
+                                children: [
+                                  const Text('ALL'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isAllSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isAllSelected = value ?? false;
+                                  });
+                                },
+                              ),
                             ],
                           ),
-                          Checkbox(
-                            value: _isAllSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isAllSelected = value ?? false;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 20),
-                      // MYGO Checkbox
-                      Column(
-                        children: [
-                          Row(
+                          const SizedBox(width: 20),
+                          // MYGO Checkbox
+                          Column(
                             children: [
-                              const Text('MYGO'),
-                              const SizedBox(width: 8), // 增加文字與圖標的間距
-                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                              Row(
+                                children: [
+                                  const Text('MYGO'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isMygoSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isMygoSelected = value ?? false;
+                                  });
+                                },
+                              ),
                             ],
                           ),
-                          Checkbox(
-                            value: _isMygoSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isMygoSelected = value ?? false;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 20),
-                      // FAVORITE Checkbox
-                      Column(
-                        children: [
-                          Row(
+                          const SizedBox(width: 20),
+                          // FAVORITE Checkbox
+                          Column(
                             children: [
-                              const Text('FAVORITE'),
-                              const SizedBox(width: 8), // 增加文字與圖標的間距
-                              const Icon(Icons.folder, color: Colors.grey), // 資料夾圖標
+                              Row(
+                                children: [
+                                  const Text('FAVORITE'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isFavoriteSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isFavoriteSelected = value ?? false;
+                                  });
+                                },
+                              ),
                             ],
-                          ),
-                          Checkbox(
-                            value: _isFavoriteSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isFavoriteSelected = value ?? false;
-                              });
-                            },
                           ),
                         ],
                       ),
@@ -333,9 +357,10 @@ class _MainScreenState extends State<MainScreen> {
                       );
                     } else {
                       // AI response (images)
-                      final imagePaths = (message['content'] is List)
-                          ? List<String>.from(message['content'])
-                          : <String>[];
+                      final imagePaths =
+                          (message['content'] is List)
+                              ? List<String>.from(message['content'])
+                              : <String>[];
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(
@@ -353,51 +378,54 @@ class _MainScreenState extends State<MainScreen> {
                             child: Wrap(
                               spacing: 8.0,
                               runSpacing: 8.0,
-                              children: imagePaths.map((imagePath) {
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Image.asset(
-                                      imagePath,
-                                      width: imageSize,
-                                      height: imageSize,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Container(
-                                          // Placeholder on error
+                              children:
+                                  imagePaths.map((imagePath) {
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          imagePath,
                                           width: imageSize,
                                           height: imageSize,
-                                          color: Colors.grey[300],
-                                          child: Icon(
-                                            Icons.broken_image,
-                                            color: Colors.grey[600],
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return Container(
+                                              // Placeholder on error
+                                              width: imageSize,
+                                              height: imageSize,
+                                              color: Colors.grey[300],
+                                              child: Icon(
+                                                Icons.broken_image,
+                                                color: Colors.grey[600],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          // Like button
+                                          icon: Icon(
+                                            _likedImages.contains(imagePath)
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color:
+                                                _likedImages.contains(imagePath)
+                                                    ? Colors.pinkAccent
+                                                    : Colors.grey,
+                                            size: 24,
                                           ),
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      // Like button
-                                      icon: Icon(
-                                        _likedImages.contains(imagePath)
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: _likedImages.contains(imagePath)
-                                            ? Colors.pinkAccent
-                                            : Colors.grey,
-                                        size: 24,
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      onPressed: () => _toggleLike(imagePath),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
+                                          visualDensity: VisualDensity.compact,
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          onPressed:
+                                              () => _toggleLike(imagePath),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
                             ),
                           ),
                         ),
@@ -407,46 +435,48 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               // Input Field Area
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        decoration: InputDecoration(
-                          hintText: "輸入提示...",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceVariant,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+              _showTextField
+                  ? Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _textController,
+                            decoration: InputDecoration(
+                              hintText: "輸入提示...",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            onSubmitted: (_) => _onSendPressed(),
                           ),
                         ),
-                        onSubmitted: (_) => _onSendPressed(),
-                      ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.send),
+                          color: theme.colorScheme.primary,
+                          iconSize: 28,
+                          onPressed: _onSendPressed,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      color: theme.colorScheme.primary,
-                      iconSize: 28,
-                      onPressed: _onSendPressed,
-                    ),
-                  ],
-                ),
-              ),
+                  )
+                  : Padding(padding: const EdgeInsets.all(16.0)),
             ],
           ),
           // Central GO button (conditionally shown)
           if (_showGoButton)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.1),
+                // color: Colors.black.withOpacity(0.1),
                 child: Center(
                   child: ElevatedButton(
                     onPressed: () {
