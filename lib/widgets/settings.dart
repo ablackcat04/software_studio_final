@@ -54,7 +54,9 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: Switch(
                 value: settings.hiddenPictures,
                 onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(hiddenPictures: value);
+                  Settings newSettings = settings.copyWith(
+                    hiddenPictures: value,
+                  );
                   setState(() {
                     settings = newSettings;
                   });
@@ -63,11 +65,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             ListTile(
-              title: Text('Privacy Policy'),
+              title: Text('Privacy Mode'),
               trailing: Switch(
                 value: settings.privacyPolicy,
                 onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(privacyPolicy: value);
+                  Settings newSettings = settings.copyWith(
+                    privacyPolicy: value,
+                  );
                   setState(() {
                     settings = newSettings;
                   });
@@ -89,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             ListTile(
-              title: Text('Option Numbers'),
+              title: Text('Suggestion Amount(Once)'),
               trailing: SizedBox(
                 width: 60,
                 child: TextFormField(
@@ -98,7 +102,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 4.0,
+                      horizontal: 8.0,
+                    ),
                   ),
                   onChanged: (String value) {
                     final int? newValue = int.tryParse(value);

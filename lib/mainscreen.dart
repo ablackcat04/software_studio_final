@@ -4,7 +4,9 @@ import 'package:software_studio_final/models/settings.dart';
 import 'package:software_studio_final/widgets/customDrawer.dart';
 import 'package:software_studio_final/widgets/favorite.dart'; // Keep widget imports here if MainScreen navigates
 import 'package:software_studio_final/widgets/settings.dart';
+import 'package:software_studio_final/widgets/toggleButton.dart';
 import 'package:software_studio_final/widgets/trending.dart';
+import 'widgets/toggleButton.dart';
 
 // Import the new custom drawer
 import 'widgets/customDrawer.dart'; // Adjust path if needed
@@ -38,20 +40,17 @@ class _MainScreenState extends State<MainScreen> {
   bool _showGoButton = false;
   bool _hideButtons = false;
   bool _showTextField = false;
-
-  // 新增狀態變數來控制 Checkbox 的選中狀態
-  bool _isAllSelected = false;
+  bool _showOptions = false;
+  bool _isAllSelected = true;
   bool _isMygoSelected = false;
   bool _isFavoriteSelected = false;
-
-  // 新增變數來控制 Checkbox 的顯示
-  bool _showCheckboxes = true;
+  bool _showCheckboxes = false;
 
   // --- Navigation Methods (remain in MainScreen as they use its context) ---
   void _goToSettings() {
-    Navigator.pop(context); // Close drawer before navigating
+    // Navigator.pop(context); // Close drawer before navigating
     Settings initSettings = Settings(
-      optionNumbers: 3,
+      optionNumbers: 5,
       myFavorite: true,
       hiddenPictures: false,
       privacyPolicy: true,
@@ -70,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _goToFavorite() {
-    Navigator.pop(context); // Close drawer before navigating
+    // Navigator.pop(context); // Close drawer before navigating
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => FavoritePage()),
@@ -78,7 +77,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _goToTrending() {
-    Navigator.pop(context); // Close drawer before navigating
+    // Navigator.pop(context); // Close drawer before navigating
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TrendingPage()),
@@ -110,6 +109,7 @@ class _MainScreenState extends State<MainScreen> {
       _hideButtons = false; // Show input buttons again
       _showCheckboxes = false;
       _hideButtons = true;
+      _showOptions = true;
     });
     // Note: Navigator.pop(context) is called within the CustomDrawer's onTap
   }
@@ -135,6 +135,24 @@ class _MainScreenState extends State<MainScreen> {
         _hideButtons = true;
         _showCheckboxes = false;
       });
+    } else {
+      setState(() {
+        _messages.add({'isUser': true, 'content': 'regenerate'});
+        _textController.clear();
+        _messages.add({
+          'isUser': false,
+          'content': [
+            'assets/images/image1.jpg',
+            'assets/images/image2.jpg',
+            'assets/images/image3.jpg',
+            'assets/images/image4.jpg',
+            'assets/images/image5.jpg',
+          ],
+        });
+        _showGoButton = false;
+        _hideButtons = true;
+        _showCheckboxes = false;
+      });
     }
   }
 
@@ -144,6 +162,7 @@ class _MainScreenState extends State<MainScreen> {
       _showGoButton = true;
       _hideButtons = true;
       _showCheckboxes = true;
+      _showOptions = true;
     });
   }
 
@@ -151,6 +170,7 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _showGoButton = false;
       _showTextField = true;
+      _showOptions = true;
       _hideButtons = true; // Keep add button hidden after GO
       _messages.add({
         'isUser': false,
@@ -198,8 +218,9 @@ class _MainScreenState extends State<MainScreen> {
       _likedImages.clear();
       _showGoButton = false;
       _hideButtons = false;
-      _showCheckboxes = true;
+      _showCheckboxes = false;
       _showTextField = false;
+      _showOptions = false;
     });
   }
 
@@ -238,92 +259,6 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Column(
             children: [
-              // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
-              if (_showCheckboxes)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 100),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // ALL Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('ALL'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isAllSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isAllSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 20),
-                          // MYGO Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('MYGO'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isMygoSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isMygoSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 20),
-                          // FAVORITE Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('FAVORITE'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isFavoriteSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isFavoriteSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
               // 訊息列表
               Expanded(
                 child: ListView.builder(
@@ -434,10 +369,104 @@ class _MainScreenState extends State<MainScreen> {
                   },
                 ),
               ),
+              // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
+              if (_showCheckboxes)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Meme Source:    '),
+                          // ALL Checkbox
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Text('ALL'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isAllSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isAllSelected = value ?? false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 20),
+                          // MYGO Checkbox
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Text('MYGO'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isMygoSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isMygoSelected = value ?? false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 20),
+                          // FAVORITE Checkbox
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Text('FAVORITE'),
+                                  const SizedBox(width: 8), // 增加文字與圖標的間距
+                                  const Icon(
+                                    Icons.folder,
+                                    color: Colors.grey,
+                                  ), // 資料夾圖標
+                                ],
+                              ),
+                              Checkbox(
+                                value: _isFavoriteSelected,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isFavoriteSelected = value ?? false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 50),
+                    ],
+                  ),
+                ),
+              _showOptions
+                  ? CustomToggleButton()
+                  : Padding(padding: EdgeInsets.all(0.0)),
               // Input Field Area
               _showTextField
                   ? Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.only(
+                      left: 16.0,
+                      right: 16.0,
+                      bottom: 16.0,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -469,7 +498,7 @@ class _MainScreenState extends State<MainScreen> {
                       ],
                     ),
                   )
-                  : Padding(padding: const EdgeInsets.all(16.0)),
+                  : Padding(padding: const EdgeInsets.all(4.0)),
             ],
           ),
           // Central GO button (conditionally shown)
