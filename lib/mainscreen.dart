@@ -119,6 +119,7 @@ class _MainScreenState extends State<MainScreen> {
       _showCheckboxes = false;
       _hideButtons = true;
       _showOptions = true;
+      _showTextField = true;
     });
     // Note: Navigator.pop(context) is called within the CustomDrawer's onTap
   }
