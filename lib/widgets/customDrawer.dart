@@ -62,7 +62,7 @@ class _DrawerHeader extends StatelessWidget {
         child: Text(
           'History',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.secondary,
+            color: Theme.of(context).colorScheme.secondaryFixed,
             fontSize: 24,
           ),
         ),
@@ -89,9 +89,9 @@ class _ChatHistoryList extends StatelessWidget {
         itemBuilder: (context, index) {
           return ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
-            title: Text("對話 ${index + 1}"),
+            title: Text("對話 ${chatHistory.length - index}"),
             onTap: () {
-              onHistoryItemSelected(index);
+              onHistoryItemSelected(chatHistory.length - index - 1);
               Navigator.pop(context);
             },
           );

@@ -46,6 +46,31 @@ class _MainScreenState extends State<MainScreen> {
   bool _isFavoriteSelected = false;
   bool _showCheckboxes = false;
 
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    // 5. Dispose the controller
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    // Use addPostFrameCallback to scroll after the frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if the controller is attached to a scroll view and has dimensions
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent, // Scroll to the bottom
+          duration: const Duration(
+            milliseconds: 200,
+          ), // Adjust duration as needed
+          curve: Curves.easeOut, // Adjust curve as needed
+        );
+      }
+    });
+  }
+
   void _copyOnTap() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -59,7 +84,7 @@ class _MainScreenState extends State<MainScreen> {
   void _goToSettings() {
     // Navigator.pop(context); // Close drawer before navigating
     Settings initSettings = Settings(
-      optionNumbers: 5,
+      optionNumbers: 4,
       myFavorite: true,
       hiddenPictures: false,
       privacyPolicy: true,
@@ -131,6 +156,9 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {
         _messages.add({'isUser': true, 'content': userInput});
         _textController.clear();
+      });
+      _scrollToBottom();
+      setState(() {
         _messages.add({
           'isUser': false,
           'content': [
@@ -138,7 +166,6 @@ class _MainScreenState extends State<MainScreen> {
             'assets/images/image2.jpg',
             'assets/images/image3.jpg',
             'assets/images/image4.jpg',
-            'assets/images/image5.jpg',
           ],
         });
         _showGoButton = false;
@@ -149,6 +176,9 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {
         _messages.add({'isUser': true, 'content': 'regenerate'});
         _textController.clear();
+      });
+      _scrollToBottom();
+      setState(() {
         _messages.add({
           'isUser': false,
           'content': [
@@ -156,7 +186,6 @@ class _MainScreenState extends State<MainScreen> {
             'assets/images/image2.jpg',
             'assets/images/image3.jpg',
             'assets/images/image4.jpg',
-            'assets/images/image5.jpg',
           ],
         });
         _showGoButton = false;
@@ -189,7 +218,6 @@ class _MainScreenState extends State<MainScreen> {
           'assets/images/image2.jpg',
           'assets/images/image3.jpg',
           'assets/images/image4.jpg',
-          'assets/images/image5.jpg',
         ],
       });
     });
@@ -272,6 +300,7 @@ class _MainScreenState extends State<MainScreen> {
               // 訊息列表
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final message = _messages[index];
@@ -597,7 +626,7 @@ class _MainScreenState extends State<MainScreen> {
                       onPressed: _onUploadPressed,
                       color: theme.colorScheme.onTertiaryContainer,
                       icon: const Icon(Icons.add_photo_alternate_outlined),
-                      iconSize: 36,
+                      iconSize: 80,
                       padding: const EdgeInsets.all(12),
                     ),
                   ),
@@ -606,7 +635,7 @@ class _MainScreenState extends State<MainScreen> {
                     // Context text
                     width: screenWidth * 0.6,
                     child: Text(
-                      'Upload screenshots to provide context!',
+                      'Upload conversation screenshots to provide context!',
                       style: TextStyle(
                         fontSize: 15,
                         color: theme.colorScheme.onSurface.withOpacity(0.8),
