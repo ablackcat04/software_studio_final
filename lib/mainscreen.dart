@@ -46,6 +46,15 @@ class _MainScreenState extends State<MainScreen> {
   bool _isFavoriteSelected = false;
   bool _showCheckboxes = false;
 
+  void _copyOnTap() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied to clipboard!'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   // --- Navigation Methods (remain in MainScreen as they use its context) ---
   void _goToSettings() {
     // Navigator.pop(context); // Close drawer before navigating
@@ -227,7 +236,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageSize = screenWidth * 0.4;
+    final imageSize = screenWidth * 0.375;
     ThemeData theme = Theme.of(context);
 
     return Scaffold(
@@ -340,23 +349,49 @@ class _MainScreenState extends State<MainScreen> {
                                             );
                                           },
                                         ),
-                                        IconButton(
-                                          // Like button
-                                          icon: Icon(
-                                            _likedImages.contains(imagePath)
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color:
-                                                _likedImages.contains(imagePath)
-                                                    ? Colors.pinkAccent
-                                                    : Colors.grey,
-                                            size: 24,
+                                        SizedBox(
+                                          width: imageSize,
+                                          child: Center(
+                                            child: Row(
+                                              mainAxisSize:
+                                                  MainAxisSize
+                                                      .min, // <--- This keeps the Row just as wide as needed
+                                              children: [
+                                                IconButton(
+                                                  onPressed: _copyOnTap,
+                                                  icon: Icon(Icons.copy),
+                                                ),
+                                                SizedBox(
+                                                  width: 8,
+                                                ), // Space between the icons
+                                                IconButton(
+                                                  icon: Icon(
+                                                    _likedImages.contains(
+                                                          imagePath,
+                                                        )
+                                                        ? Icons.favorite
+                                                        : Icons.favorite_border,
+                                                    color:
+                                                        _likedImages.contains(
+                                                              imagePath,
+                                                            )
+                                                            ? Colors.pinkAccent
+                                                            : Colors.grey,
+                                                    size: 24,
+                                                  ),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  padding: EdgeInsets.zero,
+                                                  constraints:
+                                                      const BoxConstraints(),
+                                                  onPressed:
+                                                      () => _toggleLike(
+                                                        imagePath,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          visualDensity: VisualDensity.compact,
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          onPressed:
-                                              () => _toggleLike(imagePath),
                                         ),
                                       ],
                                     );
