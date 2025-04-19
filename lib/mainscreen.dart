@@ -6,10 +6,6 @@ import 'package:software_studio_final/widgets/favorite.dart'; // Keep widget imp
 import 'package:software_studio_final/widgets/settings.dart';
 import 'package:software_studio_final/widgets/toggleButton.dart';
 import 'package:software_studio_final/widgets/trending.dart';
-import 'widgets/toggleButton.dart';
-
-// Import the new custom drawer
-import 'widgets/customDrawer.dart'; // Adjust path if needed
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,6 +13,8 @@ class MainScreen extends StatefulWidget {
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
+
+enum MainState { blank, uploaded, conversation }
 
 class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -37,16 +35,13 @@ class _MainScreenState extends State<MainScreen> {
     ],
   ];
   final Set<String> _likedImages = {};
-  bool _showGoButton = false;
-  bool _hideButtons = false;
-  bool _showTextField = false;
-  bool _showOptions = false;
   bool _isAllSelected = true;
   bool _isMygoSelected = false;
   bool _isFavoriteSelected = false;
-  bool _showCheckboxes = false;
 
   final ScrollController _scrollController = ScrollController();
+
+  MainState mstate = MainState.blank;
 
   @override
   void dispose() {
@@ -139,12 +134,7 @@ class _MainScreenState extends State<MainScreen> {
       // Reset UI state when loading history
       _textController.clear();
       _likedImages.clear(); // Clear likes for the new chat context
-      _showGoButton = false;
-      _hideButtons = false; // Show input buttons again
-      _showCheckboxes = false;
-      _hideButtons = true;
-      _showOptions = true;
-      _showTextField = true;
+      mstate = MainState.conversation;
     });
     // Note: Navigator.pop(context) is called within the CustomDrawer's onTap
   }
@@ -168,9 +158,6 @@ class _MainScreenState extends State<MainScreen> {
             'assets/images/image4.jpg',
           ],
         });
-        _showGoButton = false;
-        _hideButtons = true;
-        _showCheckboxes = false;
       });
     } else {
       setState(() {
@@ -188,9 +175,6 @@ class _MainScreenState extends State<MainScreen> {
             'assets/images/image4.jpg',
           ],
         });
-        _showGoButton = false;
-        _hideButtons = true;
-        _showCheckboxes = false;
       });
     }
   }
@@ -198,19 +182,13 @@ class _MainScreenState extends State<MainScreen> {
   void _onUploadPressed() {
     setState(() {
       _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
-      _showGoButton = true;
-      _hideButtons = true;
-      _showCheckboxes = true;
-      _showOptions = true;
+      mstate = MainState.uploaded;
     });
   }
 
   void _onGoPressed() {
     setState(() {
-      _showGoButton = false;
-      _showTextField = true;
-      _showOptions = true;
-      _hideButtons = true; // Keep add button hidden after GO
+      mstate = MainState.conversation;
       _messages.add({
         'isUser': false,
         'content': [
@@ -254,11 +232,7 @@ class _MainScreenState extends State<MainScreen> {
       _messages.clear();
       _textController.clear();
       _likedImages.clear();
-      _showGoButton = false;
-      _hideButtons = false;
-      _showCheckboxes = false;
-      _showTextField = false;
-      _showOptions = false;
+      mstate = MainState.blank;
     });
   }
 
@@ -435,7 +409,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
-              if (_showCheckboxes)
+              if (mstate == MainState.uploaded)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -521,11 +495,10 @@ class _MainScreenState extends State<MainScreen> {
                     ],
                   ),
                 ),
-              _showOptions
+              (mstate != MainState.blank)
                   ? CustomToggleButton()
                   : Padding(padding: EdgeInsets.all(0.0)),
-              // Input Field Area
-              _showTextField
+              (mstate == MainState.conversation)
                   ? Padding(
                     padding: const EdgeInsets.only(
                       left: 16.0,
@@ -567,7 +540,7 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
           // Central GO button (conditionally shown)
-          if (_showGoButton)
+          if (mstate == MainState.uploaded)
             Positioned.fill(
               child: Container(
                 // color: Colors.black.withOpacity(0.1),
@@ -575,8 +548,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _showCheckboxes = false; // 隱藏 Checkbox
-                        _onGoPressed(); // 執行進入對話的邏輯
+                        _onGoPressed();
                       });
                     },
                     style: ElevatedButton.styleFrom(
@@ -602,7 +574,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           // Top-left Add button and text (conditionally shown)
-          if (!_hideButtons)
+          if (mstate == MainState.blank)
             Positioned(
               top: 20,
               left: 20,
