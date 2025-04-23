@@ -438,86 +438,72 @@ class _MainScreenState extends State<MainScreen> {
               if (_showCheckboxes)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // ALL Checkbox
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Meme Source:    '),
-                          // ALL Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('ALL'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isAllSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isAllSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
+                          Checkbox(
+                            value: _isAllSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isAllSelected = value ?? false;
+                                if (_isAllSelected ) {
+                                  _isMygoSelected = false; // 取消 MYGO 的勾選
+                                  _isFavoriteSelected = false; // 取消 FAVORITE 的勾選
+                              }
+                              });
+                            },
                           ),
-                          const SizedBox(width: 20),
-                          // MYGO Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('MYGO'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isMygoSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isMygoSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 20),
-                          // FAVORITE Checkbox
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Text('FAVORITE'),
-                                  const SizedBox(width: 8), // 增加文字與圖標的間距
-                                  const Icon(
-                                    Icons.folder,
-                                    color: Colors.grey,
-                                  ), // 資料夾圖標
-                                ],
-                              ),
-                              Checkbox(
-                                value: _isFavoriteSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isFavoriteSelected = value ?? false;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.folder, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          const Text('ALL'),
                         ],
                       ),
-                      SizedBox(height: 50),
+                      const SizedBox(width: 20),
+                      // MYGO Checkbox
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _isMygoSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isMygoSelected = value ?? false;
+                              if (_isMygoSelected) {
+                                  _isAllSelected = false; // 取消 ALL 的勾選
+                              }
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.folder, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          const Text('MYGO'),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+                      // FAVORITE Checkbox
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _isFavoriteSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _isFavoriteSelected = value ?? false;
+                                if (_isFavoriteSelected) {
+                                  _isAllSelected = false; // 取消 ALL 的勾選
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.folder, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          const Text('FAVORITE'),
+                        ],
+                      ),
                     ],
                   ),
                 ),
