@@ -272,40 +272,6 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Column(
             children: [
-              if (mstate == MainState.uploaded)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: FolderSelection(
-                    isAllSelected: _isAllSelected,
-                    isMygoSelected: _isMygoSelected,
-                    isFavoriteSelected: _isFavoriteSelected,
-                    onAllChanged: (bool value) {
-                      setState(() {
-                        _isAllSelected = value;
-                        if (_isAllSelected) {
-                          _isMygoSelected = false;
-                          _isFavoriteSelected = false;
-                        }
-                      });
-                    },
-                    onMygoChanged: (bool value) {
-                      setState(() {
-                        _isMygoSelected = value;
-                        if (_isMygoSelected) {
-                          _isAllSelected = false;
-                        }
-                      });
-                    },
-                    onFavoriteChanged: (bool value) {
-                      setState(() {
-                        _isFavoriteSelected = value;
-                        if (_isFavoriteSelected) {
-                          _isAllSelected = false;
-                        }
-                      });
-                    },
-                  ),
-                ),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
@@ -442,9 +408,44 @@ class _MainScreenState extends State<MainScreen> {
                   },
                 ),
               ),
+              if (mstate == MainState.uploaded)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: FolderSelection(
+                    isAllSelected: _isAllSelected,
+                    isMygoSelected: _isMygoSelected,
+                    isFavoriteSelected: _isFavoriteSelected,
+                    onAllChanged: (bool value) {
+                      setState(() {
+                        _isAllSelected = value;
+                        if (_isAllSelected) {
+                          _isMygoSelected = false;
+                          _isFavoriteSelected = false;
+                        }
+                      });
+                    },
+                    onMygoChanged: (bool value) {
+                      setState(() {
+                        _isMygoSelected = value;
+                        if (_isMygoSelected) {
+                          _isAllSelected = false;
+                        }
+                      });
+                    },
+                    onFavoriteChanged: (bool value) {
+                      setState(() {
+                        _isFavoriteSelected = value;
+                        if (_isFavoriteSelected) {
+                          _isAllSelected = false;
+                        }
+                      });
+                    },
+                  ),
+                ),
               (mstate != MainState.blank)
                   ? CustomToggleButton()
                   : Padding(padding: EdgeInsets.all(0.0)),
+                
               (mstate == MainState.conversation)
                   ? Padding(
                     padding: const EdgeInsets.only(
