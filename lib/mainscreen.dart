@@ -6,6 +6,7 @@ import 'package:software_studio_final/widgets/favorite.dart'; // Keep widget imp
 import 'package:software_studio_final/widgets/settings.dart';
 import 'package:software_studio_final/widgets/toggleButton.dart';
 import 'package:software_studio_final/widgets/trending.dart';
+import 'package:software_studio_final/widgets/folder.dart'; // 引入 FolderSelection
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -271,7 +272,40 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Column(
             children: [
-              // 訊息列表
+              if (mstate == MainState.uploaded)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: FolderSelection(
+                    isAllSelected: _isAllSelected,
+                    isMygoSelected: _isMygoSelected,
+                    isFavoriteSelected: _isFavoriteSelected,
+                    onAllChanged: (bool value) {
+                      setState(() {
+                        _isAllSelected = value;
+                        if (_isAllSelected) {
+                          _isMygoSelected = false;
+                          _isFavoriteSelected = false;
+                        }
+                      });
+                    },
+                    onMygoChanged: (bool value) {
+                      setState(() {
+                        _isMygoSelected = value;
+                        if (_isMygoSelected) {
+                          _isAllSelected = false;
+                        }
+                      });
+                    },
+                    onFavoriteChanged: (bool value) {
+                      setState(() {
+                        _isFavoriteSelected = value;
+                        if (_isFavoriteSelected) {
+                          _isAllSelected = false;
+                        }
+                      });
+                    },
+                  ),
+                ),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
@@ -408,79 +442,6 @@ class _MainScreenState extends State<MainScreen> {
                   },
                 ),
               ),
-              // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
-              if (mstate == MainState.uploaded)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // ALL Checkbox
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _isAllSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isAllSelected = value ?? false;
-                                if (_isAllSelected ) {
-                                  _isMygoSelected = false; // 取消 MYGO 的勾選
-                                  _isFavoriteSelected = false; // 取消 FAVORITE 的勾選
-                              }
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.folder, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          const Text('ALL'),
-                        ],
-                      ),
-                      const SizedBox(width: 20),
-                      // MYGO Checkbox
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _isMygoSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isMygoSelected = value ?? false;
-                              if (_isMygoSelected) {
-                                  _isAllSelected = false; // 取消 ALL 的勾選
-                              }
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.folder, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          const Text('MYGO'),
-                        ],
-                      ),
-                      const SizedBox(width: 20),
-                      // FAVORITE Checkbox
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _isFavoriteSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isFavoriteSelected = value ?? false;
-                                if (_isFavoriteSelected) {
-                                  _isAllSelected = false; // 取消 ALL 的勾選
-                                }
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.folder, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          const Text('FAVORITE'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
               (mstate != MainState.blank)
                   ? CustomToggleButton()
                   : Padding(padding: EdgeInsets.all(0.0)),

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'mainscreen.dart'; // 引入主畫面
 //import 'mygo_folder.dart'; // 引入 MyGO 資料夾頁面
 //import 'your_pictures_folder.dart'; // 引入 Your Pictures 資料夾頁面
-=======
-import 'mainscreen.dart';
->>>>>>> d6c89ca136a325935fa47fc967098d2012a8953e
 
 void main() {
   runApp(const MyApp());
