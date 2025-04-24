@@ -9,6 +9,7 @@ import 'package:software_studio_final/widgets/folder.dart';
 import 'package:software_studio_final/widgets/conversation.dart';
 import 'package:software_studio_final/widgets/uploadbutton.dart'; // 引入 UploadButton
 import 'package:software_studio_final/widgets/gobutton.dart'; // 引入 GoButton
+import 'package:software_studio_final/widgets/MessageInput.dart'; // 引入 MessageInput
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -276,35 +277,10 @@ class _MainScreenState extends State<MainScreen> {
                   ? CustomToggleButton()
                   : Padding(padding: EdgeInsets.all(0.0)),
               if (mstate == MainState.conversation)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _textController,
-                          decoration: InputDecoration(
-                            hintText: "輸入提示...",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surfaceVariant,
-                          ),
-                          onSubmitted: (_) => _onSendPressed(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.send),
-                        color: theme.colorScheme.primary,
-                        iconSize: 28,
-                        onPressed: _onSendPressed,
-                      ),
-                    ],
+                  MessageInput(
+                  textController: _textController,
+                  onSendPressed: _onSendPressed,
                   ),
-                ),
             ],
           ),
           if (mstate == MainState.uploaded)
