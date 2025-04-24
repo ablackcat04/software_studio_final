@@ -8,7 +8,7 @@ import 'package:software_studio_final/widgets/trending.dart';
 import 'package:software_studio_final/widgets/folder.dart';
 import 'package:software_studio_final/widgets/conversation.dart';
 import 'package:software_studio_final/widgets/uploadbutton.dart'; // 引入 UploadButton
-
+import 'package:software_studio_final/widgets/gobutton.dart'; // 引入 GoButton
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -308,32 +308,8 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
           if (mstate == MainState.uploaded)
-            Positioned.fill(
-              child: Container(
-                child: Center(
-                  child: ElevatedButton(
-                    onPressed: _onGoPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orangeAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 64,
-                        vertical: 24,
-                      ),
-                    ),
-                    child: Text(
-                      "GO!",
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onTertiaryContainer,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            GoButton(
+              onGoPressed: _onGoPressed,
             ),
           if (mstate == MainState.blank)
             UploadButton(
