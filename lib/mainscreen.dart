@@ -212,7 +212,7 @@ class _MainScreenState extends State<MainScreen> {
         title: const Text("AI Meme Suggestion"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.message), // 將圖標改為訊息圖案
             tooltip: '新增對話',
             onPressed: _onNewChatPressed,
           ),
