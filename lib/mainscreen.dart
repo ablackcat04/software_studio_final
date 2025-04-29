@@ -10,6 +10,7 @@ import 'package:software_studio_final/widgets/conversation.dart';
 import 'package:software_studio_final/widgets/uploadbutton.dart'; // 引入 UploadButton
 import 'package:software_studio_final/widgets/gobutton.dart'; // 引入 GoButton
 import 'package:software_studio_final/widgets/MessageInput.dart'; // 引入 MessageInput
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -157,10 +158,11 @@ class _MainScreenState extends State<MainScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SettingsPage(
-          initSettings: initSettings,
-          onChanged: (Settings settings) {},
-        ),
+        builder:
+            (context) => SettingsPage(
+              initSettings: initSettings,
+              onChanged: (Settings settings) {},
+            ),
       ),
     );
   }
@@ -229,15 +231,13 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Column(
             children: [
-              Expanded(
-                child: ConversationWidget(
-                  messages: _messages,
-                  scrollController: _scrollController,
-                  imageSize: imageSize,
-                  onCopy: _copyOnTap,
-                  onToggleLike: _toggleLike,
-                  likedImages: _likedImages,
-                ),
+              ConversationWidget(
+                messages: _messages,
+                scrollController: _scrollController,
+                imageSize: imageSize,
+                onCopy: _copyOnTap,
+                onToggleLike: _toggleLike,
+                likedImages: _likedImages,
               ),
               if (mstate == MainState.uploaded)
                 Padding(
@@ -273,20 +273,17 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
                 ),
-               (mstate != MainState.blank)
+              (mstate != MainState.blank)
                   ? CustomToggleButton()
                   : Padding(padding: EdgeInsets.all(0.0)),
               if (mstate == MainState.conversation)
-                  MessageInput(
+                MessageInput(
                   textController: _textController,
                   onSendPressed: _onSendPressed,
-                  ),
+                ),
             ],
           ),
-          if (mstate == MainState.uploaded)
-            GoButton(
-              onGoPressed: _onGoPressed,
-            ),
+          if (mstate == MainState.uploaded) GoButton(onGoPressed: _onGoPressed),
           if (mstate == MainState.blank)
             UploadButton(
               onUploadPressed: _onUploadPressed,
