@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'mainscreen.dart'; // 引入主畫面
+import 'package:provider/provider.dart';
+import 'state/settings_notifier.dart';
 //import 'mygo_folder.dart'; // 引入 MyGO 資料夾頁面
 //import 'your_pictures_folder.dart'; // 引入 Your Pictures 資料夾頁面
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsNotifier>(
+          create: (context) => SettingsNotifier(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,6 +23,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme = Provider.of<SettingsNotifier>(context).settings.isDarkTheme;
+
     return MaterialApp(
       title: 'AI Meme Suggester',
       home: const MainScreen(), // 主畫面
@@ -26,7 +39,7 @@ class MyApp extends StatelessWidget {
           // Customize other text styles for dark mode
         ),
       ),
-      // themeMode: ThemeMode.system,
+      themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
     );
   }
 }

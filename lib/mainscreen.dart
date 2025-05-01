@@ -175,22 +175,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _goToSettings() {
-    Settings initSettings = Settings(
-      optionNumbers: 4,
-      myFavorite: true,
-      hiddenPictures: false,
-      privacyPolicy: true,
-      isDarkTheme: false,
-    );
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder:
-            (context) => SettingsPage(
-              initSettings: initSettings,
-              onChanged: (Settings settings) {},
-            ),
-      ),
+      MaterialPageRoute(builder: (context) => SettingsPage()),
     );
   }
 

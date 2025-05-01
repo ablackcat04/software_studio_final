@@ -22,8 +22,6 @@ class ConversationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Expanded(
       child: ListView.builder(
         controller: scrollController,

@@ -1,32 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:software_studio_final/models/settings.dart';
+import 'package:provider/provider.dart';
+import 'package:software_studio_final/state/settings_notifier.dart';
 
-class SettingsPage extends StatefulWidget {
-  final Settings initSettings;
-  final Function(Settings settings) onChanged;
-
-  const SettingsPage({
-    super.key,
-    required this.initSettings,
-    required this.onChanged,
-  });
-
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  late Settings settings;
-
-  @override
-  void initState() {
-    super.initState();
-    settings = widget.initSettings;
-  }
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final settingsNotifier = Provider.of<SettingsNotifier>(
+      context,
+      listen: false,
+    );
+    final Settings settings = settingsNotifier.settings;
+
     return GestureDetector(
       onTap: () {
         // 點擊 TextField 以外的地方時關閉鍵盤
@@ -40,56 +28,28 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text('My Favorite'),
               trailing: Switch(
                 value: settings.myFavorite,
-                onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(myFavorite: value);
-                  setState(() {
-                    settings = newSettings;
-                  });
-                  widget.onChanged(newSettings);
-                },
+                onChanged: (bool value) {},
               ),
             ),
             ListTile(
               title: Text('Hidden Pictures'),
               trailing: Switch(
                 value: settings.hiddenPictures,
-                onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(
-                    hiddenPictures: value,
-                  );
-                  setState(() {
-                    settings = newSettings;
-                  });
-                  widget.onChanged(newSettings);
-                },
+                onChanged: (bool value) {},
               ),
             ),
             ListTile(
               title: Text('Privacy Mode'),
               trailing: Switch(
                 value: settings.privacyPolicy,
-                onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(
-                    privacyPolicy: value,
-                  );
-                  setState(() {
-                    settings = newSettings;
-                  });
-                  widget.onChanged(newSettings);
-                },
+                onChanged: (bool value) {},
               ),
             ),
             ListTile(
-              title: Text('Theme'),
+              title: Text('Dark Theme'),
               trailing: Switch(
                 value: settings.isDarkTheme,
-                onChanged: (bool value) {
-                  Settings newSettings = settings.copyWith(isDarkTheme: value);
-                  setState(() {
-                    settings = newSettings;
-                  });
-                  widget.onChanged(newSettings);
-                },
+                onChanged: settingsNotifier.setTheme,
               ),
             ),
             ListTile(
@@ -98,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 60,
                 child: TextFormField(
                   keyboardType: TextInputType.number,
-                  initialValue: settings.optionNumbers.toString(),
+                  initialValue: settings.optionNumber.toString(),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
@@ -110,12 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: (String value) {
                     final int? newValue = int.tryParse(value);
                     if (newValue != null) {
-                      Settings newSettings = settings.copyWith(
-                        optionNumbers: newValue,
-                      );
-                      setState(() {
-                        settings = newSettings;
-                      });
+                      settingsNotifier.setOptionNumber(newValue);
                     }
                   },
                 ),
