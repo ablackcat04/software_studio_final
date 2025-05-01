@@ -11,7 +11,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsNotifier = Provider.of<SettingsNotifier>(
       context,
-      listen: false,
+      listen: true,
     );
     final Settings settings = settingsNotifier.settings;
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/models/settings.dart';
+import 'package:provider/provider.dart';
+import 'package:software_studio_final/models/chat_history.dart';
+import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/widgets/customDrawer.dart';
 import 'package:software_studio_final/widgets/favorite.dart';
 import 'package:software_studio_final/widgets/settings.dart';
@@ -25,19 +28,6 @@ class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<Map<String, dynamic>> _messages = [];
-  final List<List<Map<String, dynamic>>> _chatHistory = [
-    [
-      {'isUser': true, 'content': 'Old message 1'},
-      {
-        'isUser': false,
-        'content': ['assets/images/image1.jpg', 'assets/images/image2.jpg'],
-      },
-    ],
-    [
-      {'isUser': true, 'content': 'Another chat'},
-    ],
-  ];
   final Set<String> _likedImages = {};
   bool _isAllSelected = true;
   bool _isMygoSelected = false;
@@ -82,92 +72,78 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _onSendPressed() {
+  void _onSendPressed(BuildContext context) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
     final userInput = _textController.text.trim();
     if (userInput.isNotEmpty) {
       setState(() {
-        // 新增使用者訊息
-        _messages.add({'isUser': true, 'content': userInput});
+        chatHistoryNotifier.addMessage(
+          ChatMessage(isAI: false, content: userInput, images: []),
+        );
         _textController.clear();
-
-        // 模擬 AI 回覆
-        _scrollToBottom();
-        _messages.add({
-          'isUser': false,
-          'content': [
+      });
+      _scrollToBottom();
+      chatHistoryNotifier.addMessage(
+        ChatMessage(
+          isAI: true,
+          content: '這是AI的回覆',
+          images: [
             'assets/images/image1.jpg',
             'assets/images/image2.jpg',
             'assets/images/image3.jpg',
             'assets/images/image4.jpg',
           ],
-        });
-      });
+        ),
+      );
     }
   }
 
-  Future<void> _onUploadPressed() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
-        _messages.add({
-          'isUser': false,
-          'content': [image.path],
-        });
-        mstate = MainState.uploaded;
-      });
-    }
-  }
-
-  void _onGoPressed() {
+  void _onUploadPressed(BuildContext context) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
     setState(() {
-      // 儲存當前對話到歷史對話
-      if (_messages.isNotEmpty) {
-        _chatHistory.add(
-          List<Map<String, dynamic>>.from(
-            _messages.map((m) {
-              final newMsg = Map<String, dynamic>.from(m);
-              if (newMsg['content'] is List) {
-                newMsg['content'] = List.from(newMsg['content']);
-              }
-              return newMsg;
-            }),
-          ),
-        );
-      }
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: false, content: '圖片已上傳 ✅', images: []),
+      );
+      mstate = MainState.uploaded;
+    });
+  }
 
-      // 切換到對話狀態
+  void _onGoPressed(BuildContext context) {
+    setState(() {
       mstate = MainState.conversation;
-
-      // 模擬 AI 回覆
-      _messages.add({
-        'isUser': false,
-        'content': [
+    });
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+    chatHistoryNotifier.addMessage(
+      ChatMessage(
+        isAI: true,
+        content: '這是AI的回覆',
+        images: [
           'assets/images/image1.jpg',
           'assets/images/image2.jpg',
           'assets/images/image3.jpg',
           'assets/images/image4.jpg',
         ],
-      });
-
-      // 更新歷史對話（包含 AI 回覆）
-      _chatHistory[_chatHistory.length - 1] = List<Map<String, dynamic>>.from(
-        _messages.map((m) {
-          final newMsg = Map<String, dynamic>.from(m);
-          if (newMsg['content'] is List) {
-            newMsg['content'] = List.from(newMsg['content']);
-          }
-          return newMsg;
-        }),
-      );
-    });
+      ),
+    );
   }
 
-  void _onNewChatPressed() {
+  void _onNewChatPressed(BuildContext context) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+
+    chatHistoryNotifier.newChat();
     setState(() {
-      _messages.clear();
       _textController.clear();
       _likedImages.clear();
       mstate = MainState.blank;
@@ -195,20 +171,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void _handleHistorySelection(int index) {
-    if (index < 0 || index >= _chatHistory.length) return;
+  void _handleHistorySelection(BuildContext context, int index) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
 
+    chatHistoryNotifier.switchCurrentByIndex(index);
     setState(() {
-      _messages.clear();
-      _messages.addAll(
-        _chatHistory[index].map((msg) {
-          final newMsg = Map<String, dynamic>.from(msg);
-          if (newMsg['content'] is List) {
-            newMsg['content'] = List.from(newMsg['content']);
-          }
-          return newMsg;
-        }),
-      );
       _textController.clear();
       _likedImages.clear();
       mstate = MainState.conversation;
@@ -230,22 +200,22 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.message), // 將圖標改為訊息圖案
             tooltip: '新增對話',
-            onPressed: _onNewChatPressed,
+            onPressed: () => _onNewChatPressed(context),
           ),
         ],
       ),
       drawer: CustomDrawer(
-        chatHistory: _chatHistory,
-        onHistoryItemSelected: _handleHistorySelection,
+        onHistoryItemSelected:
+            (index) => _handleHistorySelection(context, index),
         onGoToTrending: _goToTrending,
         onGoToFavorite: _goToFavorite,
         onGoToSettings: _goToSettings,
         onDeleteChat: (int index) {
-          setState(() {
-            if (index >= 0 && index < _chatHistory.length) {
-              _chatHistory.removeAt(index);
-            }
-          });
+          final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+            context,
+            listen: false,
+          );
+          chatHistoryNotifier.removeChatHistoryByIndex(index);
         },
       ),
       body: Stack(
@@ -253,7 +223,6 @@ class _MainScreenState extends State<MainScreen> {
           Column(
             children: [
               ConversationWidget(
-                messages: _messages,
                 scrollController: _scrollController,
                 imageSize: imageSize,
                 onCopy: _copyOnTap,
@@ -300,14 +269,15 @@ class _MainScreenState extends State<MainScreen> {
               if (mstate == MainState.conversation)
                 MessageInput(
                   textController: _textController,
-                  onSendPressed: _onSendPressed,
+                  onSendPressed: () => _onSendPressed(context),
                 ),
             ],
           ),
-          if (mstate == MainState.uploaded) GoButton(onGoPressed: _onGoPressed),
+          if (mstate == MainState.uploaded)
+            GoButton(onGoPressed: () => _onGoPressed(context)),
           if (mstate == MainState.blank)
             UploadButton(
-              onUploadPressed: _onUploadPressed,
+              onUploadPressed: () => _onUploadPressed(context),
               screenWidth: screenWidth,
             ),
         ],

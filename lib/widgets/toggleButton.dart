@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 
 class CustomToggleButton extends StatefulWidget {
   @override
@@ -7,7 +6,7 @@ class CustomToggleButton extends StatefulWidget {
 }
 
 class _CustomToggleButtonState extends State<CustomToggleButton> {
-  List<bool> _isSelected = [
+  final List<bool> _isSelected = [
     true,
     false,
     false,
@@ -34,6 +33,12 @@ class _CustomToggleButtonState extends State<CustomToggleButton> {
       child: SizedBox(
         height: 40,
         child: ToggleButtons(
+          isSelected: _isSelected,
+          onPressed: _onToggle,
+          borderRadius: BorderRadius.circular(8),
+          selectedColor: Theme.of(context).colorScheme.primaryContainer,
+          fillColor: Theme.of(context).colorScheme.primaryContainer,
+          color: Colors.black,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -52,12 +57,6 @@ class _CustomToggleButtonState extends State<CustomToggleButton> {
               child: Text('關鍵字', style: ts),
             ),
           ],
-          isSelected: _isSelected,
-          onPressed: _onToggle,
-          borderRadius: BorderRadius.circular(8),
-          selectedColor: Theme.of(context).colorScheme.primaryContainer,
-          fillColor: Theme.of(context).colorScheme.primaryContainer,
-          color: Colors.black,
         ),
       ),
     );

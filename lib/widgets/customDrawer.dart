@@ -1,11 +1,10 @@
 // custom_drawer.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:software_studio_final/state/chat_history_notifier.dart';
 
 class CustomDrawer extends StatelessWidget {
   // --- Dependencies passed from the parent ---
-
-  // Data needed for display
-  final List<List<Map<String, dynamic>>> chatHistory;
 
   // Callbacks for actions
   final Function(int)
@@ -18,7 +17,6 @@ class CustomDrawer extends StatelessWidget {
   // Constructor to receive dependencies
   const CustomDrawer({
     super.key,
-    required this.chatHistory,
     required this.onHistoryItemSelected,
     required this.onGoToTrending,
     required this.onGoToFavorite,
@@ -34,7 +32,6 @@ class CustomDrawer extends StatelessWidget {
           const _DrawerHeader(),
 
           _ChatHistoryList(
-            chatHistory: chatHistory,
             onHistoryItemSelected: onHistoryItemSelected,
             onDeleteChat: onDeleteChat, // 傳遞刪除對話的回調函式
           ),
@@ -75,18 +72,21 @@ class _DrawerHeader extends StatelessWidget {
 }
 
 class _ChatHistoryList extends StatelessWidget {
-  final List<List<Map<String, dynamic>>> chatHistory;
   final Function(int) onHistoryItemSelected;
   final Function(int) onDeleteChat; // 新增刪除對話的回調函式
 
   const _ChatHistoryList({
-    required this.chatHistory,
     required this.onHistoryItemSelected,
     required this.onDeleteChat, // 接收刪除對話的回調函式
   });
 
   @override
   Widget build(BuildContext context) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: true,
+    );
+    final chatHistory = chatHistoryNotifier.chatHistory;
     return Expanded(
       child: ListView.builder(
         padding: EdgeInsets.zero,
@@ -94,7 +94,7 @@ class _ChatHistoryList extends StatelessWidget {
         itemBuilder: (context, index) {
           return ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
-            title: Text("對話 ${chatHistory.length - index}"),
+            title: Text(chatHistory[index].name),
             trailing: IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
