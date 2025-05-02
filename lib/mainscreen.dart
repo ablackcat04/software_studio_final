@@ -226,6 +226,13 @@ class _MainScreenState extends State<MainScreen> {
         onGoToTrending: _goToTrending,
         onGoToFavorite: _goToFavorite,
         onGoToSettings: _goToSettings,
+        onDeleteChat: (int index) {
+          setState(() {
+            if (index >= 0 && index < _chatHistory.length) {
+              _chatHistory.removeAt(index);
+            }
+          });
+        },
       ),
       body: Stack(
         children: [

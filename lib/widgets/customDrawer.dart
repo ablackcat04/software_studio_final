@@ -13,6 +13,7 @@ class CustomDrawer extends StatelessWidget {
   final VoidCallback onGoToTrending; // Callback for Trending button
   final VoidCallback onGoToFavorite; // Callback for Favorite button
   final VoidCallback onGoToSettings; // Callback for Settings button
+  final Function(int) onDeleteChat; // 新增刪除對話的回調函式
 
   // Constructor to receive dependencies
   const CustomDrawer({
@@ -22,6 +23,7 @@ class CustomDrawer extends StatelessWidget {
     required this.onGoToTrending,
     required this.onGoToFavorite,
     required this.onGoToSettings,
+    required this.onDeleteChat, // 接收刪除對話的回調函式
   });
 
   @override
@@ -34,6 +36,7 @@ class CustomDrawer extends StatelessWidget {
           _ChatHistoryList(
             chatHistory: chatHistory,
             onHistoryItemSelected: onHistoryItemSelected,
+            onDeleteChat: onDeleteChat, // 傳遞刪除對話的回調函式
           ),
 
           _DrawerActionButtons(
@@ -74,10 +77,12 @@ class _DrawerHeader extends StatelessWidget {
 class _ChatHistoryList extends StatelessWidget {
   final List<List<Map<String, dynamic>>> chatHistory;
   final Function(int) onHistoryItemSelected;
+  final Function(int) onDeleteChat; // 新增刪除對話的回調函式
 
   const _ChatHistoryList({
     required this.chatHistory,
     required this.onHistoryItemSelected,
+    required this.onDeleteChat, // 接收刪除對話的回調函式
   });
 
   @override
@@ -90,6 +95,12 @@ class _ChatHistoryList extends StatelessWidget {
           return ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
             title: Text("對話 ${chatHistory.length - index}"),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                onDeleteChat(chatHistory.length - index - 1);
+              },
+            ),
             onTap: () {
               onHistoryItemSelected(chatHistory.length - index - 1);
               Navigator.pop(context);
