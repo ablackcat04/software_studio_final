@@ -42,16 +42,54 @@ class _FavoritePageState extends State<FavoritePage> {
                   ),
                 ),
                 const SizedBox(width: 8), // 圖片與文字之間的間距
-                // 文字部分
+                // 文字與按鈕部分
                 Expanded(
-                  child: Text(
-                    itemData.title,
-                    style: const TextStyle(
-                      fontSize: 16, // 調整文字大小
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 顯示文字
+                      Text(
+                        itemData.title,
+                        style: const TextStyle(
+                          fontSize: 16, // 調整文字大小
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8), // 文字與按鈕之間的間距
+                      // 收藏與複製按鈕
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.favorite),
+                            color: Colors.red,
+                            onPressed: () {
+                              // 收藏按鈕的邏輯
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${itemData.title} removed from favorites!'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy),
+                            color: Colors.blue,
+                            onPressed: () {
+                              // 複製按鈕的邏輯
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${itemData.title} copied to clipboard!'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
