@@ -5,14 +5,10 @@ class TrendingPage extends StatelessWidget {
   final List<ListItemData> _items = List.generate(
     20,
     (i) => ListItemData(
-      // Example of using a placeholder image URL - replace with real ones
-      imageUrl:
-          'https://picsum.photos/seed/${i + 1}/80/80', // Random image based on index
-      title: "Trending Meme ${i + 1}",
-      subtitle1:
-          "This is the first subtitle for item ${i + 1}. It can be a bit longer.",
-      // Make subtitle2 sometimes null or empty for testing the condition
-      subtitle2: (i % 3 == 0) ? "Optional Info ${i + 1}" : null,
+      imageUrl: 'https://picsum.photos/seed/${i + 1}/400/400', // 放大圖片比例
+      title: "TOP${i + 1}", // 修改文字為 TOP1、TOP2 等
+      subtitle1: "", // 移除副標題
+      subtitle2: "", // 移除副標題
     ),
   );
 
@@ -23,22 +19,76 @@ class TrendingPage extends StatelessWidget {
       body: ListView.builder(
         itemCount: _items.length,
         itemBuilder: (BuildContext context, int index) {
-          // Get the data for the current item
           final itemData = _items[index];
 
-          // Create an instance of the custom widget, passing the data
-          return CustomListItemWidget(
-            itemData: itemData,
-            onTap: () {
-              // Handle item tap - e.g., navigate or show details
-              print('Copied: ${itemData.title}');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Copied ${itemData.title} to clipboard!'),
-                  duration: const Duration(seconds: 1),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 圖片部分
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.network(
+                    itemData.imageUrl ?? 'https://via.placeholder.com/400',
+                    width: MediaQuery.of(context).size.width * 0.8, // 圖片占用 60% 的寬度
+                    height: MediaQuery.of(context).size.width * 0.8, // 高度與寬度相同
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              );
-            },
+                const SizedBox(width: 8), // 圖片與文字之間的間距
+                // 文字與按鈕部分
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 顯示文字
+                      Text(
+                        itemData.title,
+                        style: const TextStyle(
+                          fontSize: 16, // 調整文字大小
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8), // 文字與按鈕之間的間距
+                      // 收藏與複製按鈕
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.favorite_border),
+                            color: Colors.red,
+                            onPressed: () {
+                              // 收藏按鈕的邏輯
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${itemData.title} added to favorites!'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy),
+                            color: Colors.blue,
+                            onPressed: () {
+                              // 複製按鈕的邏輯
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${itemData.title} copied to clipboard!'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
