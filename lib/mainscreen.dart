@@ -408,7 +408,6 @@ class _MainScreenState extends State<MainScreen> {
                   },
                 ),
               ),
-              // 只有在 _showCheckboxes 為 true 時顯示 Checkbox 區域
               if (mstate == MainState.uploaded)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -539,7 +538,7 @@ class _MainScreenState extends State<MainScreen> {
                   : Padding(padding: const EdgeInsets.all(4.0)),
             ],
           ),
-          // Central GO button (conditionally shown)
+          // Central GO button
           if (mstate == MainState.uploaded)
             Positioned.fill(
               child: Container(
