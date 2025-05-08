@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class AIMessageBlock extends StatelessWidget {
@@ -34,27 +35,50 @@ class AIMessageBlock extends StatelessWidget {
             spacing: 8.0,
             runSpacing: 8.0,
             children:
-                imagePaths.map((imagePath) {
+                imagePaths.map((path) {
+                  final bool isFile =
+                      path.startsWith('/') || path.startsWith('file://');
+                  Widget imageWidget =
+                      isFile
+                          ? Image.file(
+                            File(path),
+                            width: imageSize,
+                            height: imageSize,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: imageSize,
+                                height: imageSize,
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                          )
+                          : Image.asset(
+                            path,
+                            width: imageSize,
+                            height: imageSize,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: imageSize,
+                                height: imageSize,
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                          );
+
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        imagePath,
-                        width: imageSize,
-                        height: imageSize,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: imageSize,
-                            height: imageSize,
-                            color: Colors.grey[300],
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.grey[600],
-                            ),
-                          );
-                        },
-                      ),
+                      imageWidget,
                       SizedBox(
                         width: imageSize,
                         child: Center(
@@ -62,22 +86,22 @@ class AIMessageBlock extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                onPressed: () => onCopy(imagePath),
+                                onPressed: () => onCopy(path),
                                 icon: const Icon(Icons.copy),
                               ),
                               const SizedBox(width: 8),
                               IconButton(
                                 icon: Icon(
-                                  likedImages.contains(imagePath)
+                                  likedImages.contains(path)
                                       ? Icons.favorite
                                       : Icons.favorite_border,
                                   color:
-                                      likedImages.contains(imagePath)
+                                      likedImages.contains(path)
                                           ? Colors.pinkAccent
                                           : Colors.grey,
                                   size: 24,
                                 ),
-                                onPressed: () => onToggleLike(imagePath),
+                                onPressed: () => onToggleLike(path),
                               ),
                             ],
                           ),

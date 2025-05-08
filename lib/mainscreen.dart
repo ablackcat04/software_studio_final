@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/models/settings.dart';
 import 'package:software_studio_final/widgets/customDrawer.dart';
 import 'package:software_studio_final/widgets/favorite.dart';
@@ -82,15 +83,65 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onSendPressed() {
-  final userInput = _textController.text.trim();
-  if (userInput.isNotEmpty) {
+    final userInput = _textController.text.trim();
+    if (userInput.isNotEmpty) {
+      setState(() {
+        // 新增使用者訊息
+        _messages.add({'isUser': true, 'content': userInput});
+        _textController.clear();
+
+        // 模擬 AI 回覆
+        _scrollToBottom();
+        _messages.add({
+          'isUser': false,
+          'content': [
+            'assets/images/image1.jpg',
+            'assets/images/image2.jpg',
+            'assets/images/image3.jpg',
+            'assets/images/image4.jpg',
+          ],
+        });
+      });
+    }
+  }
+
+  Future<void> _onUploadPressed() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
+        _messages.add({
+          'isUser': false,
+          'content': [image.path],
+        });
+        mstate = MainState.uploaded;
+      });
+    }
+  }
+
+  void _onGoPressed() {
     setState(() {
-      // 新增使用者訊息
-      _messages.add({'isUser': true, 'content': userInput});
-      _textController.clear();
+      // 儲存當前對話到歷史對話
+      if (_messages.isNotEmpty) {
+        _chatHistory.add(
+          List<Map<String, dynamic>>.from(
+            _messages.map((m) {
+              final newMsg = Map<String, dynamic>.from(m);
+              if (newMsg['content'] is List) {
+                newMsg['content'] = List.from(newMsg['content']);
+              }
+              return newMsg;
+            }),
+          ),
+        );
+      }
+
+      // 切換到對話狀態
+      mstate = MainState.conversation;
 
       // 模擬 AI 回覆
-      _scrollToBottom();
       _messages.add({
         'isUser': false,
         'content': [
@@ -100,68 +151,28 @@ class _MainScreenState extends State<MainScreen> {
           'assets/images/image4.jpg',
         ],
       });
-    });
-  }
-}
 
-  void _onUploadPressed() {
-    setState(() {
-      _messages.add({'isUser': true, 'content': '圖片已上傳 ✅'});
-      mstate = MainState.uploaded;
-    });
-  }
-
-void _onGoPressed() {
-  setState(() {
-    // 儲存當前對話到歷史對話
-    if (_messages.isNotEmpty) {
-      _chatHistory.add(
-        List<Map<String, dynamic>>.from(
-          _messages.map((m) {
-            final newMsg = Map<String, dynamic>.from(m);
-            if (newMsg['content'] is List) {
-              newMsg['content'] = List.from(newMsg['content']);
-            }
-            return newMsg;
-          }),
-        ),
+      // 更新歷史對話（包含 AI 回覆）
+      _chatHistory[_chatHistory.length - 1] = List<Map<String, dynamic>>.from(
+        _messages.map((m) {
+          final newMsg = Map<String, dynamic>.from(m);
+          if (newMsg['content'] is List) {
+            newMsg['content'] = List.from(newMsg['content']);
+          }
+          return newMsg;
+        }),
       );
-    }
-
-    // 切換到對話狀態
-    mstate = MainState.conversation;
-
-    // 模擬 AI 回覆
-    _messages.add({
-      'isUser': false,
-      'content': [
-        'assets/images/image1.jpg',
-        'assets/images/image2.jpg',
-        'assets/images/image3.jpg',
-        'assets/images/image4.jpg',
-      ],
     });
+  }
 
-    // 更新歷史對話（包含 AI 回覆）
-    _chatHistory[_chatHistory.length - 1] = List<Map<String, dynamic>>.from(
-      _messages.map((m) {
-        final newMsg = Map<String, dynamic>.from(m);
-        if (newMsg['content'] is List) {
-          newMsg['content'] = List.from(newMsg['content']);
-        }
-        return newMsg;
-      }),
-    );
-  });
-}
   void _onNewChatPressed() {
-  setState(() {
-    _messages.clear();
-    _textController.clear();
-    _likedImages.clear();
-    mstate = MainState.blank;
-  });
-}
+    setState(() {
+      _messages.clear();
+      _textController.clear();
+      _likedImages.clear();
+      mstate = MainState.blank;
+    });
+  }
 
   void _goToSettings() {
     Settings initSettings = Settings(
