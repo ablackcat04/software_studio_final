@@ -8,26 +8,36 @@ class CopyButton extends StatelessWidget {
 
   const CopyButton({super.key, required this.imagePath});
 
-  void _onCopy(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  void _notifyResult(ScaffoldMessengerState scaffoldMessenger, bool success) {
+    scaffoldMessenger.showSnackBar(
       SnackBar(
-        content: Text('Copied $imagePath to clipboard!'),
+        content: Text(success ? 'Copy success' : 'Copy error'),
         duration: const Duration(seconds: 1),
+        backgroundColor: success ? Colors.green : Colors.red,
       ),
     );
+  }
+
+  void _onCopy(BuildContext context) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     if (imagePath.startsWith('http')) {
       http
           .get(Uri.parse(imagePath))
           .then((onValue) {
             if (onValue.statusCode == 200) {
               final bytes = onValue.bodyBytes;
-              Pasteboard.writeImage(bytes);
+              try {
+                Pasteboard.writeImage(bytes);
+                _notifyResult(scaffoldMessenger, true);
+              } catch (e) {
+                _notifyResult(scaffoldMessenger, false);
+              }
             } else {
-              print('Failed to copy image');
+              _notifyResult(scaffoldMessenger, false);
             }
           })
           .catchError((onError) {
-            print('Error: $onError');
+            _notifyResult(scaffoldMessenger, false);
           });
     } else {
       rootBundle
@@ -35,9 +45,10 @@ class CopyButton extends StatelessWidget {
           .then((onValue) {
             final bytes = onValue.buffer.asUint8List();
             Pasteboard.writeImage(bytes);
+            _notifyResult(scaffoldMessenger, true);
           })
           .catchError((onError) {
-            print('Error: $onError');
+            _notifyResult(scaffoldMessenger, false);
           });
     }
   }
