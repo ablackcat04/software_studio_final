@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CustomToggleButton extends StatefulWidget {
+class ModeSwitch extends StatefulWidget {
+  const ModeSwitch({super.key});
+
   @override
-  _CustomToggleButtonState createState() => _CustomToggleButtonState();
+  State<ModeSwitch> createState() => _ModeSwitchState();
 }
 
-class _CustomToggleButtonState extends State<CustomToggleButton> {
+class _ModeSwitchState extends State<ModeSwitch> {
   final List<bool> _isSelected = [
     true,
     false,

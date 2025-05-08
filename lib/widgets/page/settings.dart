@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:software_studio_final/models/settings.dart';
+import 'package:software_studio_final/model//settings.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 

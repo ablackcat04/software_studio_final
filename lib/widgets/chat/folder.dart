@@ -9,14 +9,14 @@ class FolderSelection extends StatelessWidget {
   final Function(bool) onFavoriteChanged;
 
   const FolderSelection({
-    Key? key,
+    super.key,
     required this.isAllSelected,
     required this.isMygoSelected,
     required this.isFavoriteSelected,
     required this.onAllChanged,
     required this.onMygoChanged,
     required this.onFavoriteChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

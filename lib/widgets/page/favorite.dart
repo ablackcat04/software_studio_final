@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/widgets/customList.dart';
+import 'package:software_studio_final/widgets/custom_list.dart';
 
-class TrendingPage extends StatefulWidget {
+class FavoritePage extends StatefulWidget {
+  const FavoritePage({super.key});
+
   @override
-  State<TrendingPage> createState() => _TrendingPageState();
+  State<FavoritePage> createState() => _FavoritePageState();
 }
 
-class _TrendingPageState extends State<TrendingPage> {
+class _FavoritePageState extends State<FavoritePage> {
   final List<ListItemData> _items = List.generate(
     20,
     (i) => ListItemData(
@@ -18,12 +20,12 @@ class _TrendingPageState extends State<TrendingPage> {
   );
 
   // 用於追蹤每個項目的收藏狀態
-  final List<bool> _isFavorite = List.generate(20, (index) => false);
+  final List<bool> _isFavorite = List.generate(20, (index) => true);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Trending')),
+      appBar: AppBar(title: const Text('Favorite')),
       body: ListView.builder(
         itemCount: _items.length,
         itemBuilder: (BuildContext context, int index) {

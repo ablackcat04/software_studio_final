@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/models/chat_history.dart';
+import 'package:software_studio_final/model//chat_history.dart';
 
 class ChatHistoryNotifier extends ChangeNotifier {
   final List<ChatHistory> _chatHistory = [];

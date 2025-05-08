@@ -5,10 +5,10 @@ class MessageInput extends StatelessWidget {
   final VoidCallback onSendPressed;
 
   const MessageInput({
-    Key? key,
+    super.key,
     required this.textController,
     required this.onSendPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class MessageInput extends StatelessWidget {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: theme.colorScheme.surfaceVariant,
+                fillColor: theme.colorScheme.surfaceContainerHighest,
               ),
               onSubmitted: (_) => onSendPressed(),
             ),

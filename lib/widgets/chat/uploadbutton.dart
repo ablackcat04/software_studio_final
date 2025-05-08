@@ -5,10 +5,10 @@ class UploadButton extends StatelessWidget {
   final double screenWidth;
 
   const UploadButton({
-    Key? key,
+    super.key,
     required this.onUploadPressed,
     required this.screenWidth,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

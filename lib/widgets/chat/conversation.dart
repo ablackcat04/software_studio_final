@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:software_studio_final/widgets/AIMessageBlock.dart';
-import 'package:software_studio_final/widgets/UserMessageBlock.dart';
+import 'package:software_studio_final/widgets/chat/ai_message.dart';
+import 'package:software_studio_final/widgets/chat/user_message.dart';
 
 class ConversationWidget extends StatelessWidget {
   final ScrollController scrollController;
@@ -35,7 +35,7 @@ class ConversationWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final message = messages[index];
           if (message.isAI) {
-            return AIMessageBlock(
+            return AIMessage(
               imagePaths: message.images,
               imageSize: imageSize,
               onCopy: onCopy,
@@ -43,7 +43,7 @@ class ConversationWidget extends StatelessWidget {
               likedImages: likedImages,
             );
           } else {
-            return UserMessageBlock(messageContent: message.content);
+            return UserMessage(messageContent: message.content);
           }
         },
       ),

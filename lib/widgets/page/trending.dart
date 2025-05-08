@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/widgets/customList.dart';
+import 'package:flutter/services.dart';
+import 'package:software_studio_final/widgets/custom_list.dart';
+import 'package:pasteboard/pasteboard.dart';
 
-class FavoritePage extends StatefulWidget {
+class TrendingPage extends StatefulWidget {
+  const TrendingPage({super.key});
+
   @override
-  State<FavoritePage> createState() => _FavoritePageState();
+  State<TrendingPage> createState() => _TrendingPageState();
 }
 
-class _FavoritePageState extends State<FavoritePage> {
+class _TrendingPageState extends State<TrendingPage> {
   final List<ListItemData> _items = List.generate(
     20,
     (i) => ListItemData(
@@ -18,19 +22,23 @@ class _FavoritePageState extends State<FavoritePage> {
   );
 
   // 用於追蹤每個項目的收藏狀態
-  final List<bool> _isFavorite = List.generate(20, (index) => true);
+  final List<bool> _isFavorite = List.generate(20, (index) => false);
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorite')),
+      appBar: AppBar(title: const Text('Trending')),
       body: ListView.builder(
         itemCount: _items.length,
         itemBuilder: (BuildContext context, int index) {
           final itemData = _items[index];
 
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -39,7 +47,8 @@ class _FavoritePageState extends State<FavoritePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   child: Image.network(
                     itemData.imageUrl ?? 'https://via.placeholder.com/400',
-                    width: MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
+                    width:
+                        MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
                     height: MediaQuery.of(context).size.width * 0.6, // 高度與寬度相同
                     fit: BoxFit.cover,
                   ),
@@ -67,16 +76,18 @@ class _FavoritePageState extends State<FavoritePage> {
                           IconButton(
                             icon: Icon(
                               _isFavorite[index]
-                                  ? Icons.favorite // 實心愛心
+                                  ? Icons
+                                      .favorite // 實心愛心
                                   : Icons.favorite_border, // 空心愛心
                             ),
                             color: Colors.red,
                             onPressed: () {
                               setState(() {
-                                _isFavorite[index] = !_isFavorite[index]; // 切換收藏狀態
+                                _isFavorite[index] =
+                                    !_isFavorite[index]; // 切換收藏狀態
                               });
 
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              scaffoldMessenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     _isFavorite[index]
@@ -92,10 +103,11 @@ class _FavoritePageState extends State<FavoritePage> {
                             icon: const Icon(Icons.copy),
                             color: Colors.blue,
                             onPressed: () {
-                              // 複製按鈕的邏輯
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              scaffoldMessenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('${itemData.title} copied to clipboard!'),
+                                  content: Text(
+                                    '${itemData.title} copied to clipboard!',
+                                  ),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );

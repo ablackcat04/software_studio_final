@@ -1,5 +1,6 @@
 // custom_drawer.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
 
@@ -9,20 +10,9 @@ class CustomDrawer extends StatelessWidget {
   // Callbacks for actions
   final Function(int)
   onHistoryItemSelected; // Callback when a history item is tapped
-  final VoidCallback onGoToTrending; // Callback for Trending button
-  final VoidCallback onGoToFavorite; // Callback for Favorite button
-  final VoidCallback onGoToSettings; // Callback for Settings button
-  final Function(int) onDeleteChat; // 新增刪除對話的回調函式
 
   // Constructor to receive dependencies
-  const CustomDrawer({
-    super.key,
-    required this.onHistoryItemSelected,
-    required this.onGoToTrending,
-    required this.onGoToFavorite,
-    required this.onGoToSettings,
-    required this.onDeleteChat, // 接收刪除對話的回調函式
-  });
+  const CustomDrawer({super.key, required this.onHistoryItemSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -31,16 +21,9 @@ class CustomDrawer extends StatelessWidget {
         children: <Widget>[
           const _DrawerHeader(),
 
-          _ChatHistoryList(
-            onHistoryItemSelected: onHistoryItemSelected,
-            onDeleteChat: onDeleteChat, // 傳遞刪除對話的回調函式
-          ),
+          _ChatHistoryList(onHistoryItemSelected: onHistoryItemSelected),
 
-          _DrawerActionButtons(
-            onGoToTrending: onGoToTrending,
-            onGoToFavorite: onGoToFavorite,
-            onGoToSettings: onGoToSettings,
-          ),
+          _DrawerActionButtons(),
         ],
       ),
     );
@@ -73,12 +56,8 @@ class _DrawerHeader extends StatelessWidget {
 
 class _ChatHistoryList extends StatelessWidget {
   final Function(int) onHistoryItemSelected;
-  final Function(int) onDeleteChat; // 新增刪除對話的回調函式
 
-  const _ChatHistoryList({
-    required this.onHistoryItemSelected,
-    required this.onDeleteChat, // 接收刪除對話的回調函式
-  });
+  const _ChatHistoryList({required this.onHistoryItemSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +77,13 @@ class _ChatHistoryList extends StatelessWidget {
             trailing: IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                onDeleteChat(chatHistory.length - index - 1);
+                final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+                  context,
+                  listen: false,
+                );
+                chatHistoryNotifier.removeChatHistoryByIndex(
+                  index,
+                );
               },
             ),
             onTap: () {
@@ -113,16 +98,6 @@ class _ChatHistoryList extends StatelessWidget {
 }
 
 class _DrawerActionButtons extends StatelessWidget {
-  final VoidCallback onGoToTrending;
-  final VoidCallback onGoToFavorite;
-  final VoidCallback onGoToSettings;
-
-  const _DrawerActionButtons({
-    required this.onGoToTrending,
-    required this.onGoToFavorite,
-    required this.onGoToSettings,
-  });
-
   // Helper to get button text style, kept local to where it's used
   TextStyle _getButtonText(BuildContext context) {
     return TextStyle(
@@ -163,7 +138,7 @@ class _DrawerActionButtons extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start, // Align buttons left
             children: [
               ElevatedButton.icon(
-                onPressed: onGoToTrending,
+                onPressed: () => context.push('/trending'),
                 label: const Text('Trending'),
                 icon: const Icon(Icons.trending_up),
                 iconAlignment: IconAlignment.start,
@@ -171,7 +146,7 @@ class _DrawerActionButtons extends StatelessWidget {
               ),
               const SizedBox(height: 8), // Add spacing
               ElevatedButton.icon(
-                onPressed: onGoToFavorite,
+                onPressed: () => context.push('/favorite'),
                 label: const Text('Favorite'),
                 icon: const Icon(Icons.favorite),
                 iconAlignment: IconAlignment.start,
@@ -179,7 +154,7 @@ class _DrawerActionButtons extends StatelessWidget {
               ),
               const SizedBox(height: 8), // Add spacing
               ElevatedButton.icon(
-                onPressed: onGoToSettings,
+                onPressed: () => context.push('/settings'),
                 label: const Text('Settings'),
                 icon: const Icon(Icons.settings),
                 iconAlignment: IconAlignment.start,

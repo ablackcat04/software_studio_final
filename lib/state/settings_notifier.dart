@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/models/settings.dart';
+import 'package:software_studio_final/model//settings.dart';
 
 class SettingsNotifier extends ChangeNotifier {
   Settings _settings = Settings(

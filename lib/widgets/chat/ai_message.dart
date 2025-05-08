@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-class AIMessageBlock extends StatelessWidget {
+class AIMessage extends StatelessWidget {
   final List<String> imagePaths;
   final double imageSize;
   final Function(String) onCopy;
   final Function(String) onToggleLike;
   final Set<String> likedImages;
 
-  const AIMessageBlock({
+  const AIMessage({
     super.key,
     required this.imagePaths,
     required this.imageSize,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class UserMessageBlock extends StatelessWidget {
+class UserMessage extends StatelessWidget {
   final String messageContent;
 
-  const UserMessageBlock({
+  const UserMessage({
     super.key,
     required this.messageContent,
   });

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:software_studio_final/models/settings.dart';
 import 'package:provider/provider.dart';
-import 'package:software_studio_final/models/chat_history.dart';
+import 'package:software_studio_final/model//chat_history.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:software_studio_final/widgets/customDrawer.dart';
-import 'package:software_studio_final/widgets/favorite.dart';
-import 'package:software_studio_final/widgets/settings.dart';
-import 'package:software_studio_final/widgets/toggleButton.dart';
-import 'package:software_studio_final/widgets/trending.dart';
-import 'package:software_studio_final/widgets/folder.dart';
-import 'package:software_studio_final/widgets/conversation.dart';
-import 'package:software_studio_final/widgets/uploadbutton.dart'; // 引入 UploadButton
-import 'package:software_studio_final/widgets/gobutton.dart'; // 引入 GoButton
-import 'package:software_studio_final/widgets/MessageInput.dart'; // 引入 MessageInput
+import 'package:software_studio_final/widgets/custom_drawer.dart';
+import 'package:software_studio_final/widgets/page/favorite.dart';
+import 'package:software_studio_final/widgets/page/settings.dart';
+import 'package:software_studio_final/widgets/page/trending.dart';
+import 'package:software_studio_final/widgets/chat/mode_switch.dart';
+import 'package:software_studio_final/widgets/chat/folder.dart';
+import 'package:software_studio_final/widgets/chat/conversation.dart';
+import 'package:software_studio_final/widgets/chat/uploadbutton.dart'; // 引入 UploadButton
+import 'package:software_studio_final/widgets/chat/go_button.dart'; // 引入 GoButton
+import 'package:software_studio_final/widgets/chat/message_input.dart'; // 引入 MessageInput
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -79,10 +78,10 @@ class _MainScreenState extends State<MainScreen> {
     );
     final userInput = _textController.text.trim();
     if (userInput.isNotEmpty) {
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: false, content: userInput, images: []),
+      );
       setState(() {
-        chatHistoryNotifier.addMessage(
-          ChatMessage(isAI: false, content: userInput, images: []),
-        );
         _textController.clear();
       });
       _scrollToBottom();
@@ -106,18 +105,15 @@ class _MainScreenState extends State<MainScreen> {
       context,
       listen: false,
     );
+    chatHistoryNotifier.addMessage(
+      ChatMessage(isAI: false, content: '圖片已上傳 ✅', images: []),
+    );
     setState(() {
-      chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: false, content: '圖片已上傳 ✅', images: []),
-      );
       mstate = MainState.uploaded;
     });
   }
 
   void _onGoPressed(BuildContext context) {
-    setState(() {
-      mstate = MainState.conversation;
-    });
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,
       listen: false,
@@ -134,6 +130,9 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+    setState(() {
+      mstate = MainState.conversation;
+    });
   }
 
   void _onNewChatPressed(BuildContext context) {
@@ -141,34 +140,12 @@ class _MainScreenState extends State<MainScreen> {
       context,
       listen: false,
     );
-
     chatHistoryNotifier.newChat();
     setState(() {
       _textController.clear();
       _likedImages.clear();
       mstate = MainState.blank;
     });
-  }
-
-  void _goToSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SettingsPage()),
-    );
-  }
-
-  void _goToFavorite() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FavoritePage()),
-    );
-  }
-
-  void _goToTrending() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => TrendingPage()),
-    );
   }
 
   void _handleHistorySelection(BuildContext context, int index) {
@@ -195,7 +172,7 @@ class _MainScreenState extends State<MainScreen> {
       key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.secondaryContainer,
-        title: const Text("AI Meme Suggestion"),
+        title: const Text("AI Meme Suggestor"),
         actions: [
           IconButton(
             icon: const Icon(Icons.message), // 將圖標改為訊息圖案
@@ -207,16 +184,6 @@ class _MainScreenState extends State<MainScreen> {
       drawer: CustomDrawer(
         onHistoryItemSelected:
             (index) => _handleHistorySelection(context, index),
-        onGoToTrending: _goToTrending,
-        onGoToFavorite: _goToFavorite,
-        onGoToSettings: _goToSettings,
-        onDeleteChat: (int index) {
-          final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-            context,
-            listen: false,
-          );
-          chatHistoryNotifier.removeChatHistoryByIndex(index);
-        },
       ),
       body: Stack(
         children: [
@@ -264,7 +231,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
               (mstate != MainState.blank)
-                  ? CustomToggleButton()
+                  ? ModeSwitch()
                   : Padding(padding: EdgeInsets.all(0.0)),
               if (mstate == MainState.conversation)
                 MessageInput(
