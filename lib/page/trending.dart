@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:software_studio_final/widgets/custom_list.dart';
-import 'package:pasteboard/pasteboard.dart';
 
 class TrendingPage extends StatefulWidget {
   const TrendingPage({super.key});

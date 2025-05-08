@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/model//chat_history.dart';
+import 'package:software_studio_final/model/chat_history.dart';
 
 class ChatHistoryNotifier extends ChangeNotifier {
   final List<ChatHistory> _chatHistory = [];
@@ -11,9 +11,13 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
   ChatHistory get currentChatHistory => _currentChatHistory;
   List<ChatHistory> get chatHistory => _chatHistory;
+  Map<String, bool> get activateFolder => _currentChatHistory.activateFolder;
+  bool getFolder(String folder) =>
+      _currentChatHistory.activateFolder[folder] ?? false;
 
   ChatHistoryNotifier() {
     newChat();
+    currentSetup();
     addMessage(ChatMessage(isAI: false, content: 'Old message 1', images: []));
     addMessage(
       ChatMessage(
@@ -22,33 +26,30 @@ class ChatHistoryNotifier extends ChangeNotifier {
         images: ['assets/images/image1.jpg', 'assets/images/image2.jpg'],
       ),
     );
+
     newChat();
+    currentSetup();
     addMessage(ChatMessage(isAI: false, content: 'Another chat', images: []));
+    newChat();
   }
 
   void newChat() {
-    if (_currentChatHistory.messages.isNotEmpty) {
-      _chatHistory
-          .firstWhere((history) => history.id == _currentChatHistory.id)
-          .messages = _currentChatHistory.messages;
-    }
-
     _currentChatHistory = ChatHistory(
-      name: DateTime.now().toString(),
+      name: "新對話",
       createdAt: DateTime.now(),
       messages: [],
     );
-    _chatHistory.add(_currentChatHistory);
+    notifyListeners();
+  }
+
+  void currentSetup() {
+    _currentChatHistory.hasSetup = true;
+    _chatHistory.insert(0, _currentChatHistory);
     notifyListeners();
   }
 
   void addMessage(ChatMessage message) {
     _currentChatHistory.messages.add(message);
-    notifyListeners();
-  }
-
-  void addChatHistory(ChatHistory chatHistory) {
-    _chatHistory.add(chatHistory);
     notifyListeners();
   }
 
@@ -62,35 +63,29 @@ class ChatHistoryNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-
   void switchCurrentByIndex(int index) {
     _currentChatHistory = _chatHistory[index];
     notifyListeners();
   }
 
-
   void removeChatHistory(String id) {
     _chatHistory.removeWhere((history) => history.id == id);
     if (_currentChatHistory.id == id) {
-      _currentChatHistory = ChatHistory(
-        name: 'Test',
-        createdAt: DateTime.now(),
-        messages: [],
-      );
+      newChat();
     }
     notifyListeners();
   }
 
-
   void removeChatHistoryByIndex(int index) {
     if (_currentChatHistory.id == _chatHistory[index].id) {
-      _currentChatHistory = ChatHistory(
-        name: 'Test',
-        createdAt: DateTime.now(),
-        messages: [],
-      );
+      newChat();
     }
     _chatHistory.removeAt(index);
+    notifyListeners();
+  }
+
+  void setFolder(String folder, bool value) {
+    _currentChatHistory.activateFolder[folder] = value;
     notifyListeners();
   }
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ModeSwitch extends StatefulWidget {
-  const ModeSwitch({super.key});
+class AIModeSwitch extends StatefulWidget {
+  const AIModeSwitch({super.key});
 
   @override
-  State<ModeSwitch> createState() => _ModeSwitchState();
+  State<AIModeSwitch> createState() => _AIModeSwitchState();
 }
 
-class _ModeSwitchState extends State<ModeSwitch> {
+class _AIModeSwitchState extends State<AIModeSwitch> {
   final List<bool> _isSelected = [
     true,
     false,

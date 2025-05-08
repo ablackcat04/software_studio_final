@@ -1,24 +1,25 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 class AIMessage extends StatelessWidget {
   final List<String> imagePaths;
-  final double imageSize;
-  final Function(String) onCopy;
-  final Function(String) onToggleLike;
-  final Set<String> likedImages;
 
-  const AIMessage({
-    super.key,
-    required this.imagePaths,
-    required this.imageSize,
-    required this.onCopy,
-    required this.onToggleLike,
-    required this.likedImages,
-  });
+  const AIMessage({super.key, required this.imagePaths});
+
+  void _onCopy(BuildContext context, String image) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied $image to clipboard!'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _onToggleLike(String image) {}
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final imageSize = screenWidth * 0.375;
     final theme = Theme.of(context);
 
     return Padding(
@@ -35,50 +36,27 @@ class AIMessage extends StatelessWidget {
             spacing: 8.0,
             runSpacing: 8.0,
             children:
-                imagePaths.map((path) {
-                  final bool isFile =
-                      path.startsWith('/') || path.startsWith('file://');
-                  Widget imageWidget =
-                      isFile
-                          ? Image.file(
-                            File(path),
-                            width: imageSize,
-                            height: imageSize,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: imageSize,
-                                height: imageSize,
-                                color: Colors.grey[300],
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey[600],
-                                ),
-                              );
-                            },
-                          )
-                          : Image.asset(
-                            path,
-                            width: imageSize,
-                            height: imageSize,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: imageSize,
-                                height: imageSize,
-                                color: Colors.grey[300],
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey[600],
-                                ),
-                              );
-                            },
-                          );
-
+                imagePaths.map((imagePath) {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      imageWidget,
+                      Image.asset(
+                        imagePath,
+                        width: imageSize,
+                        height: imageSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: imageSize,
+                            height: imageSize,
+                            color: Colors.grey[300],
+                            child: Icon(
+                              Icons.broken_image,
+                              color: Colors.grey[600],
+                            ),
+                          );
+                        },
+                      ),
                       SizedBox(
                         width: imageSize,
                         child: Center(
@@ -86,22 +64,17 @@ class AIMessage extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                onPressed: () => onCopy(path),
+                                onPressed: () => _onCopy(context, imagePath),
                                 icon: const Icon(Icons.copy),
                               ),
                               const SizedBox(width: 8),
                               IconButton(
                                 icon: Icon(
-                                  likedImages.contains(path)
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color:
-                                      likedImages.contains(path)
-                                          ? Colors.pinkAccent
-                                          : Colors.grey,
+                                  true ? Icons.favorite : Icons.favorite_border,
+                                  color: true ? Colors.pinkAccent : Colors.grey,
                                   size: 24,
                                 ),
-                                onPressed: () => onToggleLike(path),
+                                onPressed: () => _onToggleLike(imagePath),
                               ),
                             ],
                           ),

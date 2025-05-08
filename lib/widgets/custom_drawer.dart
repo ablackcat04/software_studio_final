@@ -81,13 +81,11 @@ class _ChatHistoryList extends StatelessWidget {
                   context,
                   listen: false,
                 );
-                chatHistoryNotifier.removeChatHistoryByIndex(
-                  index,
-                );
+                chatHistoryNotifier.removeChatHistoryByIndex(index);
               },
             ),
             onTap: () {
-              onHistoryItemSelected(chatHistory.length - index - 1);
+              onHistoryItemSelected(index);
               Navigator.pop(context);
             },
           );
