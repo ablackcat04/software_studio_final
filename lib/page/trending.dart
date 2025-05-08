@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:software_studio_final/widgets/copy_button.dart';
 import 'package:software_studio_final/widgets/custom_list.dart';
+import 'package:software_studio_final/widgets/favorite_button.dart';
 
 class TrendingPage extends StatefulWidget {
   const TrendingPage({super.key});
@@ -71,45 +73,11 @@ class _TrendingPageState extends State<TrendingPage> {
                       // 收藏與複製按鈕
                       Column(
                         children: [
-                          IconButton(
-                            icon: Icon(
-                              _isFavorite[index]
-                                  ? Icons
-                                      .favorite // 實心愛心
-                                  : Icons.favorite_border, // 空心愛心
-                            ),
-                            color: Colors.red,
-                            onPressed: () {
-                              setState(() {
-                                _isFavorite[index] =
-                                    !_isFavorite[index]; // 切換收藏狀態
-                              });
-
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    _isFavorite[index]
-                                        ? '${itemData.title} added to favorites!'
-                                        : '${itemData.title} removed from favorites!',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy),
-                            color: Colors.blue,
-                            onPressed: () {
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${itemData.title} copied to clipboard!',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
+                          FavoriteButton(id: "id"),
+                          CopyButton(
+                            imagePath:
+                                itemData.imageUrl ??
+                                'https://via.placeholder.com/400',
                           ),
                         ],
                       ),

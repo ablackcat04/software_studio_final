@@ -1,49 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:pasteboard/pasteboard.dart';
-import 'package:http/http.dart' as http;
+import 'package:software_studio_final/widgets/copy_button.dart';
+import 'package:software_studio_final/widgets/favorite_button.dart';
 
 class AIMessage extends StatelessWidget {
   final List<String> imagePaths;
 
   const AIMessage({super.key, required this.imagePaths});
-
-  void _onCopy(BuildContext context, String imageUrl) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Copied $imageUrl to clipboard!'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-    if (imageUrl.startsWith('http')) {
-      http
-          .get(Uri.parse(imageUrl))
-          .then((onValue) {
-            if (onValue.statusCode == 200) {
-              final bytes = onValue.bodyBytes;
-              print('Image bytes: ${bytes.length}');
-              Pasteboard.writeImage(bytes);
-            } else {
-              print('Failed to load image');
-            }
-          })
-          .catchError((onError) {
-            print('Error: $onError');
-          });
-    } else {
-      rootBundle
-          .load(imageUrl)
-          .then((onValue) {
-            final bytes = onValue.buffer.asUint8List();
-            Pasteboard.writeImage(bytes);
-          })
-          .catchError((onError) {
-            print('Error: $onError');
-          });
-    }
-  }
-
-  void _onToggleLike(String image) {}
 
   @override
   Widget build(BuildContext context) {
@@ -90,19 +52,9 @@ class AIMessage extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                onPressed: () => _onCopy(context, imagePath),
-                                icon: const Icon(Icons.copy),
-                              ),
+                              CopyButton(imagePath: imagePath),
                               const SizedBox(width: 8),
-                              IconButton(
-                                icon: Icon(
-                                  true ? Icons.favorite : Icons.favorite_border,
-                                  color: true ? Colors.pinkAccent : Colors.grey,
-                                  size: 24,
-                                ),
-                                onPressed: () => _onToggleLike(imagePath),
-                              ),
+                              FavoriteButton(id: "id"),
                             ],
                           ),
                         ),

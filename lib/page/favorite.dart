@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:software_studio_final/widgets/copy_button.dart';
 import 'package:software_studio_final/widgets/custom_list.dart';
+import 'package:software_studio_final/widgets/favorite_button.dart';
 
 class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
@@ -32,7 +34,10 @@ class _FavoritePageState extends State<FavoritePage> {
           final itemData = _items[index];
 
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -41,7 +46,8 @@ class _FavoritePageState extends State<FavoritePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   child: Image.network(
                     itemData.imageUrl ?? 'https://via.placeholder.com/400',
-                    width: MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
+                    width:
+                        MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
                     height: MediaQuery.of(context).size.width * 0.6, // 高度與寬度相同
                     fit: BoxFit.cover,
                   ),
@@ -66,42 +72,11 @@ class _FavoritePageState extends State<FavoritePage> {
                       // 收藏與複製按鈕
                       Column(
                         children: [
-                          IconButton(
-                            icon: Icon(
-                              _isFavorite[index]
-                                  ? Icons.favorite // 實心愛心
-                                  : Icons.favorite_border, // 空心愛心
-                            ),
-                            color: Colors.red,
-                            onPressed: () {
-                              setState(() {
-                                _isFavorite[index] = !_isFavorite[index]; // 切換收藏狀態
-                              });
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    _isFavorite[index]
-                                        ? '${itemData.title} added to favorites!'
-                                        : '${itemData.title} removed from favorites!',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy),
-                            color: Colors.blue,
-                            onPressed: () {
-                              // 複製按鈕的邏輯
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${itemData.title} copied to clipboard!'),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
+                          FavoriteButton(id: "id"),
+                          CopyButton(
+                            imagePath:
+                                itemData.imageUrl ??
+                                'https://via.placeholder.com/400',
                           ),
                         ],
                       ),

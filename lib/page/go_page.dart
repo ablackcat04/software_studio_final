@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/model/chat_history.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:software_studio_final/widgets/chat/chat.dart';
 import 'package:software_studio_final/widgets/chat/go_button.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart'; // 引入 GoButton
