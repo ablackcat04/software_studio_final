@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:software_studio_final/widgets/customList.dart';
 
-class TrendingPage extends StatelessWidget {
+class TrendingPage extends StatefulWidget {
+  @override
+  State<TrendingPage> createState() => _TrendingPageState();
+}
+
+class _TrendingPageState extends State<TrendingPage> {
   final List<ListItemData> _items = List.generate(
     20,
     (i) => ListItemData(
@@ -11,6 +16,9 @@ class TrendingPage extends StatelessWidget {
       subtitle2: "", // 移除副標題
     ),
   );
+
+  // 用於追蹤每個項目的收藏狀態
+  final List<bool> _isFavorite = List.generate(20, (index) => false);
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +39,8 @@ class TrendingPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.0),
                   child: Image.network(
                     itemData.imageUrl ?? 'https://via.placeholder.com/400',
-                    width: MediaQuery.of(context).size.width * 0.8, // 圖片占用 60% 的寬度
-                    height: MediaQuery.of(context).size.width * 0.8, // 高度與寬度相同
+                    width: MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
+                    height: MediaQuery.of(context).size.width * 0.6, // 高度與寬度相同
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -57,13 +65,24 @@ class TrendingPage extends StatelessWidget {
                       Column(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.favorite_border),
+                            icon: Icon(
+                              _isFavorite[index]
+                                  ? Icons.favorite // 實心愛心
+                                  : Icons.favorite_border, // 空心愛心
+                            ),
                             color: Colors.red,
                             onPressed: () {
-                              // 收藏按鈕的邏輯
+                              setState(() {
+                                _isFavorite[index] = !_isFavorite[index]; // 切換收藏狀態
+                              });
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${itemData.title} added to favorites!'),
+                                  content: Text(
+                                    _isFavorite[index]
+                                        ? '${itemData.title} added to favorites!'
+                                        : '${itemData.title} removed from favorites!',
+                                  ),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );
