@@ -19,28 +19,7 @@ enum MainState { blank, uploaded, conversation }
 class _MainScreenState extends State<MainScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _pageController = PageController(initialPage: 0);
-
-  // void _scrollToBottom() {
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     if (_scrollController.hasClients) {
-  //       _scrollController.animateTo(
-  //         _scrollController.position.maxScrollExtent,
-  //         duration: const Duration(milliseconds: 200),
-  //         curve: Curves.easeOut,
-  //       );
-  //     }
-  //   });
-  // }
-
-  // void _copyOnTap(String imagePath) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Text('Copied $imagePath to clipboard!'),
-  //       duration: const Duration(seconds: 1),
-  //     ),
-  //   );
-  // }
-
+  
   void _onNewChatPressed() {
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,

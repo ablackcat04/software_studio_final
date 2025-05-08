@@ -38,6 +38,7 @@ windows/
 android/
 web/
 pubspec.lock
+.metadata
 
 # Symbolication related
 app.*.symbols
