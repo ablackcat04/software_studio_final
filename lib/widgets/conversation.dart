@@ -36,18 +36,21 @@ class ConversationWidget extends StatelessWidget {
               messageContent: message['content'].toString(),
             );
           } else {
-            // AI 回應（圖片）
-            final imagePaths =
-                (message['content'] is List)
-                    ? List<String>.from(message['content'])
-                    : <String>[];
-            return AIMessageBlock(
-              imagePaths: imagePaths,
-              imageSize: imageSize,
-              onCopy: onCopy,
-              onToggleLike: onToggleLike,
-              likedImages: likedImages,
-            );
+            if (message['content'] is String) {
+              UserMessageBlock(messageContent: message['content'].toString());
+            } else {
+              final imagePaths =
+                  (message['content'] is List)
+                      ? List<String>.from(message['content'])
+                      : <String>[];
+              return AIMessageBlock(
+                imagePaths: imagePaths,
+                imageSize: imageSize,
+                onCopy: onCopy,
+                onToggleLike: onToggleLike,
+                likedImages: likedImages,
+              );
+            }
           }
         },
       ),

@@ -109,25 +109,141 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _onSendPressed() {
+  Future<void> _onSendPressed() async {
     final userInput = _textController.text.trim();
-    if (userInput.isNotEmpty) {
-      setState(() {
-        // 新增使用者訊息
-        _messages.add({'isUser': true, 'content': userInput});
-        _textController.clear();
+    setState(() {
+      _messages.add({'isUser': true, 'content': userInput});
+      _textController.clear();
 
-        // 模擬 AI 回覆
-        _scrollToBottom();
-        _messages.add({
-          'isUser': false,
-          'content': [
-            'assets/images/image1.jpg',
-            'assets/images/image2.jpg',
-            'assets/images/image3.jpg',
-            'assets/images/image4.jpg',
-          ],
+      _scrollToBottom();
+    });
+
+    String pastInputs = '';
+    for (final i in _messages) {
+      if (i['isUser']) {
+        pastInputs += i['content'];
+      }
+    }
+
+    if (userInput.isNotEmpty) {
+      try {
+        String memeSuggestionGeneratePrompt = await _getMemeData();
+
+        final model = GenerativeModel(
+          model: 'gemini-2.5-flash-preview-04-17',
+          apiKey: apiKey,
+        );
+
+        final systemLikePart = TextPart(memeSuggestionGeneratePrompt);
+
+        final promptTextPart = TextPart(
+          'Now the user ask to regenerate meme suggestion with the prompt: $userInput, whole past inputs: $pastInputs',
+        );
+
+        print(memeSuggestionGeneratePrompt);
+        print(pastInputs);
+
+        if (guide == null) {
+          return;
+        }
+
+        // Optional guide
+        final guideTextPart = guide != null ? TextPart(guide ?? "") : null;
+
+        // Combine all into one content message
+        final content = [
+          Content.multi([
+            systemLikePart,
+            promptTextPart,
+            if (guideTextPart != null) guideTextPart,
+          ]),
+        ];
+
+        final GenerateContentResponse response = await model.generateContent(
+          content,
+        );
+
+        // Access your desired message from the response.
+        final message = response.text ?? 'Content generated successfully';
+
+        lines = message.trim().split('\n');
+
+        // Show a Snackbar
+        print(message);
+
+        setState(() {
+          // Remove the "Generating..." message
+          if (_messages.isNotEmpty &&
+              _messages.last['content'] == '正在產生推薦...') {
+            _messages.removeLast();
+          }
+
+          if (response.text != null && response.text!.isNotEmpty) {
+            _messages.add({
+              'isUser': true,
+              'content': response.text!, // This is the "Mindful Guide"
+            });
+          } else {
+            _messages.add({'isUser': true, 'content': '無法生成推薦，模型未返回文本。'});
+            mstate = MainState.error; // Or your equivalent state
+          }
         });
+      } catch (e) {
+        print('Error generating content with Gemini: $e');
+        setState(() {
+          // Remove the "Generating..." message if it's still there
+          if (_messages.isNotEmpty &&
+              _messages.last['content'] == '正在產生推薦...') {
+            _messages.removeLast();
+          }
+          _messages.add({
+            'isUser': true,
+            'content': '生成推薦時發生錯誤：\n${e.toString()}',
+          });
+          mstate = MainState.error; // Or your equivalent state
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('生成推薦時發生錯誤: ${e.toString()}')));
+        }
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+
+      setState(() {
+        // 儲存當前對話到歷史對話
+        if (_messages.isNotEmpty) {
+          _chatHistory.add(
+            List<Map<String, dynamic>>.from(
+              _messages.map((m) {
+                final newMsg = Map<String, dynamic>.from(m);
+                if (newMsg['content'] is List) {
+                  newMsg['content'] = List.from(newMsg['content']);
+                }
+                return newMsg;
+              }),
+            ),
+          );
+        }
+
+        List<String> imagePaths =
+            lines.map((number) => 'images/basic/$number.jpg').toList();
+
+        _messages.add({'isUser': false, 'content': imagePaths});
+
+        // 更新歷史對話（包含 AI 回覆）
+        _chatHistory[_chatHistory.length - 1] = List<Map<String, dynamic>>.from(
+          _messages.map((m) {
+            final newMsg = Map<String, dynamic>.from(m);
+            if (newMsg['content'] is List) {
+              newMsg['content'] = List.from(newMsg['content']);
+            }
+            return newMsg;
+          }),
+        );
       });
     }
   }
@@ -327,31 +443,7 @@ Ensure the generated intentions are distinct within each category and plausible 
     });
 
     try {
-      String memeSuggestionGeneratePrompt = """
-Your Role:
-
-You are a specialized analysis component within an AI Meme Suggestion App's 
-processing pipeline. Your primary function is to follow a provided meme 
-suggestion guide and find suitable meme from the database, 
-the database is in ID: description. 
-Your output will only consist 4 ID, separated by a newline. 
-The suggestion mode now is 一般. The database is provided below. 
-Thinking should be concise since speed is critical in this task.
-
-------------------------------------------------------------------------------
-""";
-
-      for (int id = 1; id <= 100; id += 1) {
-        final result = await getItemById(id);
-
-        if (result != null) {
-          memeSuggestionGeneratePrompt += id.toString();
-          memeSuggestionGeneratePrompt += '\n';
-          memeSuggestionGeneratePrompt += result.toString();
-          memeSuggestionGeneratePrompt += '\n\n';
-        }
-      }
-      print(memeSuggestionGeneratePrompt);
+      String memeSuggestionGeneratePrompt = await _getMemeData();
 
       final model = GenerativeModel(
         model: 'gemini-2.5-flash-preview-04-17',
@@ -470,6 +562,34 @@ Thinking should be concise since speed is critical in this task.
         }),
       );
     });
+  }
+
+  Future<String> _getMemeData() async {
+    String memeSuggestionGeneratePrompt = """
+Your Role:
+
+You are a specialized analysis component within an AI Meme Suggestion App's 
+processing pipeline. Your primary function is to follow a provided meme 
+suggestion guide and find suitable meme from the database, 
+the database is in ID: description. 
+Your output will only consist 4 ID, separated by a newline. 
+The suggestion mode now is 一般. The database is provided below. 
+Thinking should be concise since speed is critical in this task.
+
+------------------------------------------------------------------------------
+""";
+
+    for (int id = 1; id <= 100; id += 3) {
+      final result = await getItemById(id);
+
+      if (result != null) {
+        memeSuggestionGeneratePrompt += id.toString();
+        memeSuggestionGeneratePrompt += '\n';
+        memeSuggestionGeneratePrompt += result.toString();
+        memeSuggestionGeneratePrompt += '\n\n';
+      }
+    }
+    return memeSuggestionGeneratePrompt;
   }
 
   void _onNewChatPressed() {
