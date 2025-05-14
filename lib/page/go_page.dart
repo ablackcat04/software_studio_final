@@ -29,18 +29,7 @@ class _GoPageState extends State<GoPage> {
   }
 
   void _onGoPressed(BuildContext context) {
-    setState(() {
-      _isLoading = true; // 開始思考
-    });
-
-    // 模擬 2 秒的 AI 思考時間
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false; // 思考結束
-      });
-
-      // 模擬 AI 回覆
-      final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
         context,
         listen: false,
       );
@@ -57,7 +46,6 @@ class _GoPageState extends State<GoPage> {
         ),
       );
       chatHistoryNotifier.currentSetup();
-    });
   }
 
   @override
