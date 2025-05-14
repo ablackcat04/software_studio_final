@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class GoButton extends StatelessWidget {
   final VoidCallback onGoPressed;
+  final bool isLoading;
 
   const GoButton({
     super.key,
     required this.onGoPressed,
+    required this.isLoading,
   });
 
   @override
@@ -15,9 +17,9 @@ class GoButton extends StatelessWidget {
     return Positioned.fill(
       child: Center(
         child: ElevatedButton(
-          onPressed: onGoPressed,
+          onPressed: isLoading ? null : onGoPressed, // 禁用按鈕時設置為 null
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orangeAccent,
+            backgroundColor: isLoading ? Colors.grey : Colors.orangeAccent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
@@ -27,7 +29,7 @@ class GoButton extends StatelessWidget {
             ),
           ),
           child: Text(
-            "GO!",
+            isLoading ? "Thinking..." : "GO!",
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,
