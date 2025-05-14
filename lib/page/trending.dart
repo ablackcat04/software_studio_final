@@ -1,38 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/widgets/copy_button.dart';
-import 'package:software_studio_final/widgets/custom_list.dart';
 import 'package:software_studio_final/widgets/favorite_button.dart';
 
-class TrendingPage extends StatefulWidget {
+class TrendingPage extends StatelessWidget {
   const TrendingPage({super.key});
 
   @override
-  State<TrendingPage> createState() => _TrendingPageState();
-}
-
-class _TrendingPageState extends State<TrendingPage> {
-  final List<ListItemData> _items = List.generate(
-    20,
-    (i) => ListItemData(
-      imageUrl: 'https://picsum.photos/seed/${i + 1}/400/400', // 放大圖片比例
-      title: "TOP${i + 1}", // 修改文字為 TOP1、TOP2 等
-      subtitle1: "", // 移除副標題
-      subtitle2: "", // 移除副標題
-    ),
-  );
-
-  // 用於追蹤每個項目的收藏狀態
-  final List<bool> _isFavorite = List.generate(20, (index) => false);
-
-  @override
   Widget build(BuildContext context) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final items = List.generate(
+      20,
+      (i) => ListItemData(
+        id: 'item_${i + 1}',
+        imageUrl: 'https://picsum.photos/seed/${i + 1}/400/400',
+        title: "TOP${i + 1}",
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Trending')),
       body: ListView.builder(
-        itemCount: _items.length,
+        itemCount: items.length,
         itemBuilder: (BuildContext context, int index) {
-          final itemData = _items[index];
+          final item = items[index];
 
           return Padding(
             padding: const EdgeInsets.symmetric(
@@ -46,43 +34,18 @@ class _TrendingPageState extends State<TrendingPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: Image.network(
-                    itemData.imageUrl ?? 'https://via.placeholder.com/400',
-                    width:
-                        MediaQuery.of(context).size.width * 0.6, // 圖片占用 60% 的寬度
-                    height: MediaQuery.of(context).size.width * 0.6, // 高度與寬度相同
+                    item.imageUrl,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    height: MediaQuery.of(context).size.width * 0.6,
                     fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(width: 8), // 圖片與文字之間的間距
-                // 文字與按鈕部分
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 顯示文字
-                      Text(
-                        itemData.title,
-                        style: const TextStyle(
-                          fontSize: 16, // 調整文字大小
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8), // 文字與按鈕之間的間距
-                      // 收藏與複製按鈕
-                      Column(
-                        children: [
-                          FavoriteButton(id: "id"),
-                          CopyButton(
-                            imagePath:
-                                itemData.imageUrl ??
-                                'https://via.placeholder.com/400',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                const SizedBox(width: 8),
+                // 收藏按鈕
+                FavoriteButton(
+                  id: item.id,
+                  imageUrl: item.imageUrl,
+                  title: item.title,
                 ),
               ],
             ),
@@ -91,4 +54,16 @@ class _TrendingPageState extends State<TrendingPage> {
       ),
     );
   }
+}
+
+class ListItemData {
+  final String id;
+  final String imageUrl;
+  final String title;
+
+  ListItemData({
+    required this.id,
+    required this.imageUrl,
+    required this.title,
+  });
 }

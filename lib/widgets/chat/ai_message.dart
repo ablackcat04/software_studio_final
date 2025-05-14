@@ -54,7 +54,11 @@ class AIMessage extends StatelessWidget {
                             children: [
                               CopyButton(imagePath: imagePath),
                               const SizedBox(width: 8),
-                              FavoriteButton(id: "id"),
+                              FavoriteButton(
+                                id: "id",
+                                imageUrl: imagePath,
+                                title: "Image",
+                              ),
                             ],
                           ),
                         ),
