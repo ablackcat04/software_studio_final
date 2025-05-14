@@ -26,46 +26,45 @@ class AIMessage extends StatelessWidget {
           child: Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
-            children:
-                imagePaths.map((imagePath) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        imagePath,
+            children: imagePaths.map((imagePath) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    imagePath,
+                    width: imageSize,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
                         width: imageSize,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: imageSize,
-                            color: Colors.grey[300],
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.grey[600],
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(
-                        width: imageSize,
-                        child: Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CopyButton(imagePath: imagePath),
-                              const SizedBox(width: 8),
-                              FavoriteButton(
-                                id: "id",
-                                imageUrl: imagePath,
-                                title: "Image",
-                              ),
-                            ],
-                          ),
+                        color: Colors.grey[300],
+                        child: Icon(
+                          Icons.broken_image,
+                          color: Colors.grey[600],
                         ),
+                      );
+                    },
+                  ),
+                  SizedBox(
+                    width: imageSize,
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CopyButton(imagePath: imagePath),
+                          const SizedBox(width: 8),
+                          FavoriteButton(
+                            id: imagePath, // 使用圖片路徑作為唯一的 ID
+                            imageUrl: imagePath,
+                            title: "Image", // 可以根據需求修改標題
+                          ),
+                        ],
                       ),
-                    ],
-                  );
-                }).toList(),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ),
