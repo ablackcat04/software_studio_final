@@ -21,7 +21,7 @@ class UploadPage extends StatelessWidget {
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: false, content: '圖片已上傳 ✅', images: []),
         );
-        
+
         // TODO: 傳圖片至後端
 
         onNavigate.call(1);
@@ -29,16 +29,55 @@ class UploadPage extends StatelessWidget {
     });
   }
 
+  void _onSendMessage(BuildContext context, TextEditingController controller) {
+    final message = controller.text.trim();
+    if (message.isNotEmpty) {
+      final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+        context,
+        listen: false,
+      );
+
+      // 新增使用者輸入的訊息到聊天記錄
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: false, content: message, images: []),
+      );
+
+      // 清空輸入框
+      controller.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: true,
+    );
+    final messages = chatHistoryNotifier.currentChatHistory.messages;
+    final TextEditingController _messageController = TextEditingController();
 
-    return Center( // 使用 Center 將按鈕和文字置於螢幕正中間
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // 讓 Column 的大小適配內容
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Scaffold(
+      appBar: AppBar(title: const Text('上傳圖片')),
+      body: Column(
         children: [
+          // 聊天記錄
+          Expanded(
+            child: ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return ListTile(
+                  title: Text(
+                    message.isAI ? 'AI: ${message.content}' : '使用者: ${message.content}',
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // 上傳按鈕
           Container(
             decoration: BoxDecoration(
               color: Colors.orangeAccent,
@@ -59,17 +98,48 @@ class UploadPage extends StatelessWidget {
               padding: const EdgeInsets.all(12),
             ),
           ),
-          const SizedBox(height: 16), // 增加按鈕與文字之間的間距
+          const SizedBox(height: 16),
+
+          // 提示文字
           SizedBox(
             width: screenWidth * 1.2,
             child: Text(
               'Upload conversation screenshots to provide context!',
-              textAlign: TextAlign.center, // 文字置中
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
                 color: theme.colorScheme.onSurface.withOpacity(0.8),
               ),
               softWrap: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 輸入框
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: '輸入訊息...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _onSendMessage(context, _messageController),
+                  icon: const Icon(Icons.send),
+                  color: theme.colorScheme.primary,
+                ),
+              ],
             ),
           ),
         ],
