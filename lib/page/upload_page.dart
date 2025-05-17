@@ -23,28 +23,30 @@ class UploadPage extends StatelessWidget {
         );
 
         // TODO: 傳圖片至後端
-
-        onNavigate.call(1);
+        print('圖片已上傳: ${image.path}');
       }
     });
   }
 
   void _onSendMessage(BuildContext context, TextEditingController controller) {
     final message = controller.text.trim();
-    if (message.isNotEmpty) {
-      final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-        context,
-        listen: false,
-      );
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
 
-      // 新增使用者輸入的訊息到聊天記錄
+    // 如果有輸入訊息，新增到聊天記錄
+    if (message.isNotEmpty) {
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: false, content: message, images: []),
       );
-
-      // 清空輸入框
-      controller.clear();
     }
+
+    // 清空輸入框
+    controller.clear();
+
+    // 切換到下一個頁面
+    onNavigate.call(1);
   }
 
   @override
