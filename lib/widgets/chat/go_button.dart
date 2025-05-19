@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class GoButton extends StatelessWidget {
-  final VoidCallback onGoPressed;
+  final VoidCallback? onGoPressed; // 修改為可空類型
   final bool isLoading;
 
   const GoButton({
@@ -17,7 +17,7 @@ class GoButton extends StatelessWidget {
     return Positioned.fill(
       child: Center(
         child: ElevatedButton(
-          onPressed: isLoading ? null : onGoPressed, // 禁用按鈕時設置為 null
+          onPressed: onGoPressed, // 當 isLoading 為 true 時，onGoPressed 為 null
           style: ElevatedButton.styleFrom(
             backgroundColor: isLoading ? Colors.grey : Colors.orangeAccent,
             shape: RoundedRectangleBorder(
