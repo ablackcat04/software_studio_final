@@ -6,7 +6,7 @@ import 'package:software_studio_final/state/settings_notifier.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
     final settingsNotifier = Provider.of<SettingsNotifier>(

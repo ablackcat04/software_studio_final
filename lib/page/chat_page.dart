@@ -6,6 +6,7 @@ import 'package:software_studio_final/widgets/chat/ai_message.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 import 'package:software_studio_final/widgets/chat/message_input.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart';
+import 'package:software_studio_final/state/settings_notifier.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -42,25 +43,37 @@ class _ChatPageState extends State<ChatPage> {
       context,
       listen: false,
     );
+    final settingsNotifier = Provider.of<SettingsNotifier>(
+      context,
+      listen: false,
+    );
+
     final userInput = _textController.text.trim();
     if (userInput.isNotEmpty) {
+      // 新增使用者的訊息到聊天記錄
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: false, content: userInput, images: []),
       );
+
       setState(() {
         _textController.clear();
       });
+
       _scrollToBottom();
+
+      // 根據 settings 中的 optionNumber 決定圖片數量
+      final optionNumber = settingsNotifier.settings.optionNumber;
+      final List<String> images = List.generate(
+        optionNumber,
+        (index) => 'assets/images/image${index + 1}.jpg',
+      );
+
+      // 新增 AI 的回覆到聊天記錄
       chatHistoryNotifier.addMessage(
         ChatMessage(
           isAI: true,
           content: '這是AI的回覆',
-          images: [
-            'assets/images/image1.jpg',
-            'assets/images/image2.jpg',
-            'assets/images/image3.jpg',
-            'assets/images/image4.jpg',
-          ],
+          images: images,
         ),
       );
     }

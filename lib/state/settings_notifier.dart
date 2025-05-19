@@ -26,4 +26,8 @@ class SettingsNotifier extends ChangeNotifier {
     _settings.isDarkTheme = value;
     notifyListeners();
   }
+
+  int getoptionnumbers() {
+    return _settings.optionNumber;
+  }
 }
