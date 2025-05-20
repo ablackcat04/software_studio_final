@@ -22,11 +22,8 @@ class _GoPageState extends State<GoPage> {
   void initState() {
     super.initState();
 
-    // 1 秒後啟用按鈕
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isButtonEnabled = true;
-      });
+    setState(() {
+      _isButtonEnabled = true;
     });
   }
 
@@ -35,36 +32,29 @@ class _GoPageState extends State<GoPage> {
       _isLoading = true; // 開始加載
     });
 
-    // 模擬 1 秒的 AI 思考時間
-    Future.delayed(const Duration(seconds: 1), () {
-      // 根據 settings 中的 optionNumber 決定圖片數量
-      final settingsNotifier = Provider.of<SettingsNotifier>(
-        context,
-        listen: false,
-      );
-      final optionNumber = settingsNotifier.settings.optionNumber;
-      final List<String> images = List.generate(
-        optionNumber,
-        (index) => 'assets/images/image${index + 1}.jpg',
-      );
+    // 根據 settings 中的 optionNumber 決定圖片數量
+    final settingsNotifier = Provider.of<SettingsNotifier>(
+      context,
+      listen: false,
+    );
+    final optionNumber = settingsNotifier.settings.optionNumber;
+    final List<String> images = List.generate(
+      optionNumber,
+      (index) => 'assets/images/image${index + 1}.jpg',
+    );
 
-      // 模擬進入聊天畫面
-      final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-        context,
-        listen: false,
-      );
-      chatHistoryNotifier.addMessage(
-        ChatMessage(
-          isAI: true,
-          content: '這是AI的回覆',
-          images: images,
-        ),
-      );
-      chatHistoryNotifier.currentSetup();
+    // 模擬進入聊天畫面
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+    chatHistoryNotifier.addMessage(
+      ChatMessage(isAI: true, content: '這是AI的回覆', images: images),
+    );
+    chatHistoryNotifier.currentSetup();
 
-      // 切換到聊天畫面
-      Navigator.pushNamed(context, '/chat');
-    });
+    // 切換到聊天畫面
+    Navigator.pushNamed(context, '/chat');
   }
 
   @override
@@ -76,9 +66,7 @@ class _GoPageState extends State<GoPage> {
             children: [
               Expanded(
                 child: ListView(
-                  children: [
-                    UserMessage(messageContent: "圖片已上傳 ✅"),
-                  ],
+                  children: [UserMessage(messageContent: "圖片已上傳 ✅")],
                 ),
               ),
               const AIModeSwitch(),
@@ -88,21 +76,20 @@ class _GoPageState extends State<GoPage> {
             // 顯示轉圈圈的加載畫面
             Container(
               color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
-          if (!_isLoading)
-            // 只有在未加載時顯示 GoButton
-            GoButton(
-              onGoPressed: (_isButtonEnabled && !_isLoading)
-                  ? () => _onGoPressed(context)
-                  : null, // 按鈕在未啟用或加載中時不可按
-              isLoading: _isLoading || !_isButtonEnabled, // 顯示 "Thinking..." 或禁用狀態
-            ),
+          // if (!_isLoading)
+          //   // 只有在未加載時顯示 GoButton
+          //   GoButton(
+          //     onGoPressed:
+          //         (_isButtonEnabled && !_isLoading)
+          //             ? () => _onGoPressed(context)
+          //             : null, // 按鈕在未啟用或加載中時不可按
+          //     isLoading:
+          //         _isLoading || !_isButtonEnabled, // 顯示 "Thinking..." 或禁用狀態
+          //   ),
         ],
       ),
     );
   }
 }
-

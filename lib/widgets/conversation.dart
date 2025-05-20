@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:software_studio_final/widgets/AIMessageBlock.dart';
-import 'package:software_studio_final/widgets/UserMessageBlock.dart';
+import 'package:software_studio_final/widgets/chat/ai_message.dart';
+import 'package:software_studio_final/widgets/chat/user_message.dart';
 
 class ConversationWidget extends StatelessWidget {
   final List<Map<String, dynamic>> messages;
@@ -33,24 +32,16 @@ class ConversationWidget extends StatelessWidget {
           final message = messages[index];
           if (message['isUser']) {
             // 使用者訊息
-            return UserMessageBlock(
-              messageContent: message['content'].toString(),
-            );
+            return UserMessage(messageContent: message['content'].toString());
           } else {
             if (message['content'] is String) {
-              UserMessageBlock(messageContent: message['content'].toString());
+              UserMessage(messageContent: message['content'].toString());
             } else {
               final imagePaths =
                   (message['content'] is List)
                       ? List<String>.from(message['content'])
                       : <String>[];
-              return AIMessageBlock(
-                imagePaths: imagePaths,
-                imageSize: imageSize,
-                onCopy: onCopy,
-                onToggleLike: onToggleLike,
-                likedImages: likedImages,
-              );
+              return AIMessage(imagePaths: imagePaths);
             }
           }
         },

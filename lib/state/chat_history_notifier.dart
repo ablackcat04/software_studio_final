@@ -23,7 +23,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       ChatMessage(
         isAI: true,
         content: '',
-        images: ['assets/images/image1.jpg', 'assets/images/image2.jpg'],
+        images: ['images/basic/1.jpg', 'images/basic/2.jpg'],
       ),
     );
 

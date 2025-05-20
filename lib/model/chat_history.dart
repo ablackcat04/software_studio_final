@@ -6,7 +6,7 @@ class ChatHistory {
     required this.createdAt,
     required this.messages,
     this.hasSetup = false,
-  }){
+  }) {
     id = const Uuid().v4();
   }
 
@@ -14,17 +14,14 @@ class ChatHistory {
   String name;
   DateTime createdAt;
   List<ChatMessage> messages;
-  Map<String, bool> activateFolder = {
-    'Favorite': true,
-    'Mygo': true,
-  };
+  Map<String, bool> activateFolder = {'Favorite': true, 'Mygo': true};
   bool hasSetup;
 
   ChatHistory copyWith({
     String? name,
     DateTime? createdAt,
     List<ChatMessage>? messages,
-    bool? hasSetup
+    bool? hasSetup,
   }) {
     return ChatHistory(
       name: name ?? this.name,
@@ -36,15 +33,11 @@ class ChatHistory {
 }
 
 class ChatMessage {
-  ChatMessage({
-    required this.isAI,
-    required this.content,
-    required this.images,
-  });
+  ChatMessage({required this.isAI, required this.content, this.images});
 
   bool isAI;
   String content;
-  List<String> images;
+  List<String>? images;
 
   ChatMessage copyWith({bool? isAI, String? content, List<String>? images}) {
     return ChatMessage(
