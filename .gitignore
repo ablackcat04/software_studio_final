@@ -1,3 +1,5 @@
+assets/images/new/images
+.env
 # Miscellaneous
 *.class
 *.log
