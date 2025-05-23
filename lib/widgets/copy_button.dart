@@ -23,9 +23,9 @@ class CopyButton extends StatelessWidget {
     if (imagePath.startsWith('http')) {
       http
           .get(Uri.parse(imagePath))
-          .then((onValue) {
-            if (onValue.statusCode == 200) {
-              final bytes = onValue.bodyBytes;
+          .then((response) {
+            if (response.statusCode == 200) {
+              final bytes = response.bodyBytes;
               try {
                 Pasteboard.writeImage(bytes);
                 _notifyResult(scaffoldMessenger, true);
@@ -42,8 +42,8 @@ class CopyButton extends StatelessWidget {
     } else {
       rootBundle
           .load(imagePath)
-          .then((onValue) {
-            final bytes = onValue.buffer.asUint8List();
+          .then((file) {
+            final bytes = file.buffer.asUint8List();
             Pasteboard.writeImage(bytes);
             _notifyResult(scaffoldMessenger, true);
           })

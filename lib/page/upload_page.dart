@@ -222,11 +222,7 @@ Ensure the generated intentions are distinct within each category and plausible 
     _messageController.clear();
 
     // 根據 settings 中的 optionNumber 決定圖片數量
-    final settingsNotifier = Provider.of<SettingsNotifier>(
-      context,
-      listen: false,
-    );
-    final optionNumber = settingsNotifier.settings.optionNumber;
+    final optionNumber = context.read<SettingsNotifier>().settings.optionNumber;
     final List<String> images = List.generate(
       optionNumber,
       (index) => 'assets/images/image${index + 1}.jpg',

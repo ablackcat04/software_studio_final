@@ -20,7 +20,7 @@ class CurrentChatNotifier extends ChangeNotifier {
   Chat? _currentChat;
   Chat? get currentChat => _currentChat;
 
-  Future<void> saveChatToHive() async {
+  Future<void> save() async {
     if (_currentChat == null) {
       return;
     }
@@ -34,7 +34,7 @@ class CurrentChatNotifier extends ChangeNotifier {
       return;
     }
     if (_currentChat != null) {
-      await saveChatToHive();
+      await save();
     }
     _currentChatId = id;
 
@@ -82,7 +82,7 @@ class CurrentChatNotifier extends ChangeNotifier {
 
   Future<void> clear() async {
     if (_currentChat != null) {
-      await saveChatToHive();
+      await save();
     }
     _currentChat = null;
     _currentChatId = null;

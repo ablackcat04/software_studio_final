@@ -42,8 +42,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme =
-        Provider.of<SettingsNotifier>(context).settings.isDarkTheme;
+    final isDarkTheme = context.select<SettingsNotifier, bool>(
+      (notifier) => notifier.settings.isDarkTheme,
+    );
 
     return MaterialApp.router(
       routerConfig: router,

@@ -13,19 +13,19 @@ class Settings {
   bool privacyPolicy;
   bool isDarkTheme;
 
-  Settings copyWith({
-    int? optionNumber,
-    bool? myFavorite,
-    bool? hiddenPictures,
-    bool? privacyPolicy,
-    bool? isDarkTheme,
-  }) {
-    return Settings(
-      optionNumber: optionNumber ?? this.optionNumber,
-      myFavorite: myFavorite ?? this.myFavorite,
-      hiddenPictures: hiddenPictures ?? this.hiddenPictures,
-      privacyPolicy: privacyPolicy ?? this.privacyPolicy,
-      isDarkTheme: isDarkTheme ?? this.isDarkTheme,
-    );
-  }
+  factory Settings.fromMap(Map<dynamic, dynamic> map) => Settings(
+    optionNumber: map['optionNumber'] ?? 4,
+    myFavorite: map['myFavorite'] ?? true,
+    hiddenPictures: map['hiddenPictures'] ?? false,
+    privacyPolicy: map['privacyPolicy'] ?? false,
+    isDarkTheme: map['isDarkTheme'] ?? false,
+  );
+
+  Map<String, dynamic> toMap() => {
+    'optionNumber': optionNumber,
+    'myFavorite': myFavorite,
+    'hiddenPictures': hiddenPictures,
+    'privacyPolicy': privacyPolicy,
+    'isDarkTheme': isDarkTheme,
+  };
 }

@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:software_studio_final/page/favorite.dart';
-import 'package:software_studio_final/page/settings.dart';
-import 'package:software_studio_final/page/trending.dart';
+import 'package:software_studio_final/page/favorite_page.dart';
+import 'package:software_studio_final/page/settings_page.dart';
+import 'package:software_studio_final/page/trending_page.dart';
 import 'package:software_studio_final/mainscreen.dart';
 
 final GoRouter router = GoRouter(
