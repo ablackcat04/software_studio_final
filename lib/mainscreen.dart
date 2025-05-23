@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/page/chat_page.dart';
-import 'package:software_studio_final/page/go_page.dart';
 import 'package:software_studio_final/page/upload_page.dart';
-import 'package:software_studio_final/state/chat_history_notifier.dart';
+import 'package:software_studio_final/state/current_chat_notifier.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';
 
 class MainScreen extends StatefulWidget {
@@ -16,41 +15,21 @@ class MainScreen extends StatefulWidget {
 enum MainState { blank, uploaded, conversation }
 
 class _MainScreenState extends State<MainScreen> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _pageController = PageController(initialPage: 0);
-
-  // Remove the local guide variable, we'll use the Provider instead
-
-  void _onNewChatPressed() {
-    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-      context,
-      listen: false,
-    );
-    chatHistoryNotifier.newChat();
-    _pageController.jumpToPage(0);
-  }
-
-  void _handleHistorySelection(BuildContext context, int index) {
-    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-      context,
-      listen: false,
-    );
-
-    chatHistoryNotifier.switchCurrentByIndex(index);
-    _pageController.jumpToPage(0);
+  @override
+  dispose() {
+    context.read<CurrentChatNotifier>().clear();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
 
-    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-      context,
-      listen: true,
+    final active = context.select<CurrentChatNotifier, bool>(
+      (notifier) => notifier.currentChat?.active ?? false,
     );
 
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.secondaryContainer,
         title: const Text("AI Meme Suggestor"),
@@ -58,26 +37,12 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.message),
             tooltip: '新增對話',
-            onPressed: () => _onNewChatPressed(),
+            onPressed: () => context.read<CurrentChatNotifier>().clear(),
           ),
         ],
       ),
-      drawer: CustomDrawer(
-        onHistoryItemSelected:
-            (index) => _handleHistorySelection(context, index),
-      ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children:
-            !chatHistoryNotifier.currentChatHistory.hasSetup
-                ? [
-                  UploadPage(onNavigate: _pageController.jumpToPage),
-                  // GoPage(),
-                  ChatPage(),
-                ]
-                : [ChatPage()],
-      ),
+      drawer: CustomDrawer(),
+      body: !active ? UploadPage() : ChatPage(),
     );
   }
 }

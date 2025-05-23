@@ -41,6 +41,8 @@ android/
 web/
 pubspec.lock
 .metadata
+analysis_options.yaml
+devtools_options.yaml
 
 # Symbolication related
 app.*.symbols

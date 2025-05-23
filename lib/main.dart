@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
-import 'package:software_studio_final/state/chat_history_notifier.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:software_studio_final/service/navigation.dart'; // 引入主畫面 (assuming this defines 'router')
+import 'package:software_studio_final/state/chat_list_notifier.dart';
+import 'package:software_studio_final/state/current_chat_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/state/favorite_notifier.dart';
 import 'package:software_studio_final/state/guide_notifier.dart'; // <-- Add this import
@@ -12,6 +15,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
 
   await dotenv.load(fileName: ".env");
   runApp(
@@ -20,9 +25,8 @@ void main() async {
         ChangeNotifierProvider<SettingsNotifier>(
           create: (context) => SettingsNotifier(),
         ),
-        ChangeNotifierProvider<ChatHistoryNotifier>(
-          create: (context) => ChatHistoryNotifier(),
-        ),
+        ChangeNotifierProvider(create: (_) => ChatListNotifier()),
+        ChangeNotifierProvider(create: (_) => CurrentChatNotifier()),
         ChangeNotifierProvider(create: (_) => FavoriteNotifier()), // 新增收藏功能
         ChangeNotifierProvider<GuideNotifier>(
           create: (context) => GuideNotifier(),

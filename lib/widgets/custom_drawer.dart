@@ -2,17 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:software_studio_final/state/chat_history_notifier.dart';
+import 'package:software_studio_final/state/chat_list_notifier.dart';
+import 'package:software_studio_final/state/current_chat_notifier.dart';
 
 class CustomDrawer extends StatelessWidget {
-  // --- Dependencies passed from the parent ---
-
-  // Callbacks for actions
-  final Function(int)
-  onHistoryItemSelected; // Callback when a history item is tapped
-
-  // Constructor to receive dependencies
-  const CustomDrawer({super.key, required this.onHistoryItemSelected});
+  const CustomDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +15,7 @@ class CustomDrawer extends StatelessWidget {
         children: <Widget>[
           const _DrawerHeader(),
 
-          _ChatHistoryList(onHistoryItemSelected: onHistoryItemSelected),
+          _ChatList(),
 
           _DrawerActionButtons(),
         ],
@@ -54,39 +48,37 @@ class _DrawerHeader extends StatelessWidget {
   }
 }
 
-class _ChatHistoryList extends StatelessWidget {
-  final Function(int) onHistoryItemSelected;
-
-  const _ChatHistoryList({required this.onHistoryItemSelected});
-
+class _ChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-      context,
-      listen: true,
+    final chats = context.select<ChatListNotifier, List>(
+      (notifier) => notifier.chats,
     );
-    final chatHistory = chatHistoryNotifier.chatHistory;
+    final currentChatId = context.select<CurrentChatNotifier, String?>(
+      (notifier) => notifier.currentChatId,
+    );
+
     return Expanded(
       child: ListView.builder(
         padding: EdgeInsets.zero,
-        itemCount: chatHistory.length,
+        itemCount: chats.length,
         itemBuilder: (context, index) {
           return ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
-            title: Text(chatHistory[index].name),
+            title: Text(chats[index].name),
             trailing: IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-                  context,
-                  listen: false,
-                );
-                chatHistoryNotifier.removeChatHistoryByIndex(index);
+                if (chats[index].id == currentChatId) {
+                  context.read<CurrentChatNotifier>().clear();
+                }
+                context.read<ChatListNotifier>().removeChat(chats[index].id);
               },
             ),
             onTap: () {
-              onHistoryItemSelected(index);
-              Navigator.pop(context);
+              context.read<CurrentChatNotifier>().switchCurrent(
+                chats[index].id,
+              );
             },
           );
         },

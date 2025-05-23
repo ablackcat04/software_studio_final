@@ -11,19 +11,17 @@ class ConversationWidget extends StatelessWidget {
   final Set<String> likedImages;
 
   const ConversationWidget({
-    Key? key,
+    super.key,
     required this.messages,
     required this.scrollController,
     required this.imageSize,
     required this.onCopy,
     required this.onToggleLike,
     required this.likedImages,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Expanded(
       child: ListView.builder(
         controller: scrollController,
@@ -44,6 +42,7 @@ class ConversationWidget extends StatelessWidget {
               return AIMessage(imagePaths: imagePaths);
             }
           }
+          return null;
         },
       ),
     );
