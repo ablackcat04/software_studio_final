@@ -11,17 +11,16 @@ class Meme {
   int popularity;
   String category;
 
-  Meme copyWith({
-    int? id,
-    bool? isFavorite,
-    int? popularity,
-    String? category,
-  }) {
-    return Meme(
-      id: id ?? this.id,
-      isFavorite: isFavorite ?? this.isFavorite,
-      popularity: popularity ?? this.popularity,
-      category: category ?? this.category,
-    );
-  }
+  factory Meme.fromMap(Map<String, dynamic> map) => Meme(
+    id: map["id"],
+    isFavorite: map["isFavorite"] ?? false,
+    popularity: map["popularity"] ?? 0,
+    category: map["category"] ?? "",
+  );
+  Map<String, dynamic> toMap() => {
+    "id": id,
+    "isFavorite": isFavorite,
+    "popularity": popularity,
+    "category": category,
+  };
 }
