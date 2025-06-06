@@ -1,3 +1,5 @@
+// lib/pages/upload_page.dart
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,12 +8,12 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/model/chat_history.dart';
+import 'package:software_studio_final/service/ai_suggestion_service.dart'; // IMPORT THE SERVICE
 import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/state/guide_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 
-// Convert UploadPage to a StatefulWidget
 class UploadPage extends StatefulWidget {
   final void Function(int) onNavigate;
 
@@ -23,9 +25,11 @@ class UploadPage extends StatefulWidget {
 
 class _UploadPageState extends State<UploadPage> {
   final TextEditingController _messageController = TextEditingController();
-  bool _isLoading = false; // Add loading state
-
+  bool _isLoading = false;
   bool uploaded = false;
+
+  // ADDED: Create an instance of the service
+  final AiSuggestionService _aiService = AiSuggestionService();
 
   static const String imageAnalysisPrompt = """
 Your Role:
@@ -95,165 +99,136 @@ Ensure the generated intentions are distinct within each category and plausible 
   Future<void> _onUpload() async {
     if (_isLoading) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    // Use context from the state
-    final guideNotifier = Provider.of<GuideNotifier>(
-      context,
-      listen: false,
-    ); // Use listen: false as we only call setGuide
+    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,
       listen: false,
     );
-
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    uploaded = true;
 
     if (apiKey.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('API key not found.')));
-      setState(() {
-        _isLoading = false;
-      }); // Stop loading on API key error
+      setState(() => _isLoading = false);
       return;
     }
     if (image == null) {
-      setState(() {
-        _isLoading = false;
-      }); // Stop loading if no image is picked
+      setState(() => _isLoading = false);
       return;
     }
 
+    setState(() => uploaded = true);
+
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: false, content: '圖片已上傳 ✅', images: []),
-    ); // User action
-    // Add an immediate message indicating processing started
+      ChatMessage(isAI: false, content: '圖片已上傳 ✅'),
+    );
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: true, content: '正在分析圖片並生成建議指南...'),
     );
 
     try {
       final Uint8List imageBytes = await image.readAsBytes();
-      String mimeType = image.mimeType ?? 'image/jpeg';
-      if (image.mimeType == null) {
-        final String extension = image.path.split('.').last.toLowerCase();
-        if (extension == 'png')
-          mimeType = 'image/png';
-        else if (extension == 'jpg' || extension == 'jpeg')
-          mimeType = 'image/jpeg';
-        // Add other types as needed
-      }
-
       final model = GenerativeModel(
-        model: 'gemini-2.5-flash-preview-04-17',
+        model: 'gemini-1.5-flash-latest',
         apiKey: apiKey,
       );
-
-      final promptTextPart = TextPart(imageAnalysisPrompt);
-      final imagePart = DataPart(mimeType, imageBytes);
       final content = [
-        Content.multi([promptTextPart, imagePart]),
+        Content.multi([
+          TextPart(imageAnalysisPrompt),
+          DataPart(image.mimeType ?? 'image/jpeg', imageBytes),
+        ]),
       ];
 
-      // This is the potentially long-running part
-      final GenerateContentResponse response = await model.generateContent(
-        content,
-      );
+      final response = await model.generateContent(content);
       final aiGuideText = response.text;
 
-      // Optional: Find and remove the "正在分析圖片..." message before adding the result
-      // This requires ChatHistoryNotifier to support removing specific messages or the last one.
-      // For simplicity, let's just add the new message.
-      // chatHistoryNotifier.removeLastMessage(); // Example if supported
-
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
-        guideNotifier.setGuide(aiGuideText); // Store the guide
-        // Replace or add the guide message
-        // Find the '正在分析圖片...' message and update it or add a new one
-        // A simple approach is to just add the new message and let the history build up
+        guideNotifier.setGuide(aiGuideText);
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: aiGuideText),
         );
-
-        _isLoading = false;
-
-        // Optionally navigate *after* the guide is ready
-        // widget.onNavigate.call(1); // <-- Only navigate if generation was successful?
       } else {
-        // Find the '正在分析圖片...' message and update it
-        // chatHistoryNotifier.updateLastMessage('無法生成建議指南，模型未返回文本。'); // Example if supported
-        // Or just add a new error message
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: '無法生成建議指南，模型未返回文本。'),
         );
       }
     } catch (e) {
       print('Error generating guide with Gemini: $e');
-      // Find the '正在分析圖片...' message and update it
-      // chatHistoryNotifier.updateLastMessage('生成建議指南時發生錯誤：\n${e.toString()}'); // Example if supported
-      // Or just add a new error message
+      final errorMessage = '生成建議指南時發生錯誤：\n${e.toString()}';
       chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: true, content: '生成建議指南時發生錯誤：\n${e.toString()}'),
+        ChatMessage(isAI: true, content: errorMessage),
       );
-      // Show a SnackBar for more immediate user feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error generating guide: ${e.toString()}')),
       );
     } finally {
-      setState(() {
-        _isLoading = false; // Set loading state back to false
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  void _onSendMessage() {
-    // Remove BuildContext
-    final message = _messageController.text.trim();
+  Future<void> _onSendMessage() async {
+    if (_isLoading) return;
+
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,
       listen: false,
     );
-
-    // 如果有輸入訊息，新增到聊天記錄
-    if (message.isNotEmpty) {
-      chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: false, content: message, images: []),
-      );
-    }
-
-    // 清空輸入框
-    _messageController.clear();
-
-    // 根據 settings 中的 optionNumber 決定圖片數量
+    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final settingsNotifier = Provider.of<SettingsNotifier>(
       context,
       listen: false,
     );
-    final optionNumber = settingsNotifier.settings.optionNumber;
-    final List<String> images = List.generate(
-      optionNumber,
-      (index) => 'assets/images/image${index + 1}.jpg',
-    );
 
-    // 模擬進入聊天畫面
+    final userInput = _messageController.text.trim();
 
+    if (userInput.isNotEmpty) {
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: false, content: userInput),
+      );
+    }
+    _messageController.clear();
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isLoading = true);
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: true, content: '這是AI的回覆', images: images),
+      ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
     );
-    chatHistoryNotifier.currentSetup();
 
-    // 切換到聊天畫面
-    Navigator.pushNamed(context, '/chat');
+    try {
+      final guide = guideNotifier.guide;
+      // Assuming AIModeSwitch updates the currentMode in GuideNotifier
+      final currentAIMode = "一般";
+      final optionNumber = settingsNotifier.settings.optionNumber;
 
-    // 切換到下一個頁面 (This should probably only happen AFTER a guide is generated or maybe based on other logic)
-    // For now, keeping it here as per original code, but consider if this navigation should be conditional.
-    widget.onNavigate.call(1);
+      final List<String> imagePaths = await _aiService.getMemeSuggestions(
+        guide: guide,
+        userInput: userInput,
+        aiMode: currentAIMode,
+        optionNumber: optionNumber,
+      );
+
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
+      );
+
+      chatHistoryNotifier.currentSetup();
+      widget.onNavigate.call(1);
+    } catch (e) {
+      print('Error getting suggestions from service: $e');
+      final errorMessage = '生成建議時發生錯誤：\n${e.toString()}';
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: errorMessage),
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('錯誤: ${e.toString()}')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -261,24 +236,18 @@ Ensure the generated intentions are distinct within each category and plausible 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final theme = Theme.of(context);
-    // Listen to chat history changes to update the list view
-    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
-      context,
-      listen: true,
-    );
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(context);
     final messages = chatHistoryNotifier.currentChatHistory.messages;
 
     return Scaffold(
       appBar: AppBar(title: const Text('上傳圖片')),
       body: Column(
         children: [
-          // Chat history
           Expanded(
             child: ListView.builder(
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
-                // Basic list tile - consider adding more styling later
                 return ListTile(
                   title: Text(
                     message.isAI
@@ -289,20 +258,14 @@ Ensure the generated intentions are distinct within each category and plausible 
                       color: message.isAI ? Colors.grey[800] : Colors.blue[800],
                     ),
                   ),
-                  // If you added timestamps to ChatMessage, you could add a subtitle
-                  // subtitle: Text(message.timestamp.toString()),
                 );
               },
             ),
           ),
-
-          // Upload button area
           Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 16.0,
-            ), // Add some padding
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child:
-                _isLoading // Show loading indicator when loading
+                _isLoading
                     ? const CircularProgressIndicator()
                     : !uploaded
                     ? Container(
@@ -318,78 +281,67 @@ Ensure the generated intentions are distinct within each category and plausible 
                         ],
                       ),
                       child: IconButton(
-                        onPressed: _onUpload, // Call the stateful method
+                        onPressed: _onUpload,
                         color: theme.colorScheme.onTertiaryContainer,
                         icon: const Icon(Icons.add_photo_alternate_outlined),
-                        iconSize:
-                            screenWidth *
-                            0.6, // Maybe make icon slightly smaller for wider screens?
+                        iconSize: screenWidth * 0.6,
                         padding: const EdgeInsets.all(12),
-                        tooltip: '上傳對話截圖', // Add a tooltip
+                        tooltip: '上傳對話截圖',
                       ),
                     )
-                    : SizedBox(),
+                    : const SizedBox(),
           ),
-
-          !uploaded
-              ? SizedBox(
-                width: screenWidth * 0.9,
-                child: Text(
-                  'Upload conversation screenshots to provide context!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                  softWrap: true,
+          if (!uploaded)
+            SizedBox(
+              width: screenWidth * 0.9,
+              child: Text(
+                'Upload conversation screenshots to provide context!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurface.withOpacity(0.8),
                 ),
-              )
-              : SizedBox(),
+                softWrap: true,
+              ),
+            ),
           const SizedBox(height: 16),
-          uploaded ? AIModeSwitch() : SizedBox(),
-          // Input field
-          uploaded
-              ? Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: '輸入訊息...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none, // No border line
-                          ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceVariant,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 12.0,
-                          ), // Adjust padding
+          if (uploaded) AIModeSwitch(),
+          if (uploaded)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: '輸入訊息以獲得更精準的建議...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
                         ),
-                        // Allow submitting with Enter key (optional)
-                        onSubmitted: (text) => _onSendMessage(),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 12.0,
+                        ),
                       ),
+                      onSubmitted: (_) => _isLoading ? null : _onSendMessage(),
                     ),
-                    const SizedBox(width: 8),
-                    // Disable send button if loading? Maybe not strictly necessary.
-                    IconButton(
-                      onPressed:
-                          _isLoading
-                              ? null
-                              : _onSendMessage, // Disable send button while loading image/guide
-                      icon: const Icon(Icons.send),
-                      color: theme.colorScheme.primary,
-                      disabledColor: theme.colorScheme.onSurface.withOpacity(
-                        0.5,
-                      ), // Dim disabled button
-                    ),
-                  ],
-                ),
-              )
-              : SizedBox(height: screenHeight / 5),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _isLoading ? null : _onSendMessage,
+                    icon: const Icon(Icons.send),
+                    color: theme.colorScheme.primary,
+                    disabledColor: theme.colorScheme.onSurface.withOpacity(0.5),
+                  ),
+                ],
+              ),
+            )
+          else
+            SizedBox(height: screenHeight / 5),
         ],
       ),
     );
@@ -397,7 +349,7 @@ Ensure the generated intentions are distinct within each category and plausible 
 
   @override
   void dispose() {
-    _messageController.dispose(); // Dispose controller
+    _messageController.dispose();
     super.dispose();
   }
 }
