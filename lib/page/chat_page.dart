@@ -1,5 +1,6 @@
 import 'package:software_studio_final/model/chat_history.dart'; // For ChatMessage, ChatHistory
 import 'package:software_studio_final/state/guide_notifier.dart';
+import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/chat/ai_message.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 import 'package:software_studio_final/widgets/chat/message_input.dart';
@@ -141,6 +142,12 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<String> _getMemeDataForImageSuggestion(String mode) async {
     // Mode is now a parameter, e.g., "一般", "已讀亂回"
+    final optionNumber =
+        Provider.of<SettingsNotifier>(
+          context,
+          listen: false,
+        ).getoptionnumbers();
+
     String memeSuggestionGeneratePrompt = """
 Your Role:
 
@@ -148,7 +155,7 @@ You are a specialized analysis component within an AI Meme Suggestion App's
 processing pipeline. Your primary function is to follow a provided meme 
 suggestion guide and find suitable meme from the database, 
 the database is in ID: description. 
-Your output will only consist 4 ID, separated by a newline. 
+Your output will only consist $optionNumber ID, separated by a newline. 
 The suggestion mode now is $mode. The database is provided below. 
 Thinking should be concise since speed is critical in this task.
 
@@ -210,9 +217,15 @@ Thinking should be concise since speed is critical in this task.
       final guide = Provider.of<GuideNotifier>(context, listen: false).guide;
       print('guide: $guide');
 
+      final optionNumber =
+          Provider.of<SettingsNotifier>(
+            context,
+            listen: false,
+          ).getoptionnumbers();
+
       final guideContext = guide;
       final userRequestPart = TextPart(
-        "This is the guide, ${guideContext}\nThe user typed: \"$userInput\". Current AI Mode: '$_currentAIMode'. Provide 4 image IDs based on this.",
+        "This is the guide, ${guideContext}\nThe user typed: \"$userInput\". Current AI Mode: '$_currentAIMode'. Provide $optionNumber image IDs based on this.",
       );
 
       final content = [
