@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Uint8List, rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
@@ -17,6 +17,69 @@ class AnalysisResult {
 }
 
 class AiSuggestionService {
+  static const String imageAnalysisPrompt = """
+Your Role:
+
+You are a specialized analysis component within an AI Meme Suggestion App's processing pipeline. Your primary function is to analyze a user-provided screenshot of a conversation and extract key contextual information. Your output will be a structured "Guide" used by a downstream Large Language Model (LLM) to select relevant memes.
+
+Input:
+
+You will receive a screenshot image of a conversation.
+
+Your Tasks:
+
+Analyze the Screenshot: Carefully examine both the visual elements and the text content of the screenshot.
+Identify Platform: Determine the platform where the conversation is taking place (e.g., Discord, Facebook Messenger, LINE, Instagram DM, WhatsApp, Twitter/X, PTT, Dcard, 巴哈姆特動畫瘋, a generic web forum, SMS, etc.). If uncertain, state the most likely options.
+Identify User: Infer who the 'user' is (the person who captured the screenshot and intends to reply). Look for indicators like "Me," message alignment (left/right), profile picture conventions, or other UI cues. If ambiguous, describe the participants neutrally (e.g., "User is Person A on the left").
+Summarize Conversation Content: Briefly summarize the topic and tone of the recent conversation exchange shown in the screenshot. Focus on the last few messages to capture the immediate context for the user's potential reply. Note any strong emotions or key points being made.
+Infer User Intentions (Categorized): Based specifically on the current state of the conversation in the screenshot, infer why the user might want to send a meme right now. Generate four distinct potential intentions for each of the following reply modes. These intentions should reflect plausible reasons for using a meme in that specific context and mode:
+一般 (General/Normal): Standard conversational reactions (agreement, disagreement, humor, surprise, empathy, acknowledgement, topic change).
+已讀亂回 (Read & Random Reply): Intentions focused on playful disruption, absurdity, non-sequiturs, ignoring the previous point humorously, or chaotic energy.
+正經 (Serious/Formal): Intentions for more serious or formal replies (polite agreement/disagreement, concluding a point, emphasizing something seriously, expressing formal surprise or concern, perhaps even ironic use of a meme in a serious context).
+關鍵字 (Keyword): Intentions directly related to specific nouns, verbs, concepts, or objects explicitly mentioned in the recent messages. Focus on the most salient keywords.
+Output Format:
+
+Structure your findings as a "Mindful Guide" using clear Markdown formatting. This guide will directly inform the next LLM.
+
+Guide for Meme Suggestion LLM
+1. Platform Analysis
+Detected Platform: [e.g., Facebook Messenger, Discord, 巴哈姆特動畫瘋 - or "Likely X or Y", "Uncertain"]
+2. User Identification
+Inferred User: [e.g., "Me" (Right side), Person A (Left side), Bottom participant]
+3. Conversation Context Summary
+Topic: [Brief summary of what's being discussed]
+Recent Exchange: [Summary of the last 1-3 messages]
+Tone/Emotion: [e.g., Casual, Humorous, Tense, Excited, Neutral, Argumentative]
+4. Potential User Intentions (Why send a meme now?)
+Mode: 一般 (General/Normal)
+[Intention 1 - e.g., Express agreement with the last message]
+[Intention 2 - e.g., Show amusement at the situation]
+[Intention 3 - e.g., Lighten the mood]
+[Intention 4 - e.g., Casually acknowledge the message]
+Mode: 已讀亂回 (Read & Random Reply)
+[Intention 1 - e.g., Completely change the subject absurdly]
+[Intention 2 - e.g., Pretend to misunderstand the last message humorously]
+[Intention 3 - e.g., Reply with something totally unrelated and chaotic]
+[Intention 4 - e.g., Respond to an older message as if just seeing it]
+Mode: 正經 (Serious/Formal)
+[Intention 1 - e.g., Formally agree or disagree with a point made]
+[Intention 2 - e.g., Emphasize the seriousness of their own previous point]
+[Intention 3 - e.g., Politely signal the end of the discussion topic]
+[Intention 4 - e.g., Express genuine concern or surprise in a non-casual way]
+Mode: 關鍵字 (Keyword)
+Identified Keywords: [List 1-3 key terms from recent messages, e.g., "cat", "exam", "dinner"]
+[Intention 1 - e.g., React specifically to the mention of "cat"]
+[Intention 2 - e.g., Show feelings about the upcoming "exam"]
+[Intention 3 - e.g., Make a joke related to "dinner"]
+[Intention 4 - e.g., Find a meme visually representing keyword X]
+Important Considerations:
+
+Be concise but informative.
+Focus on the immediate context provided in the screenshot.
+If information is ambiguous, acknowledge it.
+Ensure the generated intentions are distinct within each category and plausible given the conversation summary.
+""";
+
   final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
   // --- NEW METHOD TO ANALYZE HISTORY ---
@@ -144,6 +207,25 @@ Thinking should be concise since speed is critical in this task.
 ------------------------------------------------------------------------------
 $databaseString
 """;
+  }
+
+  Future<String?> generateGuide({
+    required Uint8List? imageBytes,
+    required String? mimeType,
+  }) async {
+    final model = GenerativeModel(
+      model: 'gemini-2.5-flash-preview-05-20',
+      apiKey: _apiKey,
+    );
+    final content = [
+      Content.multi([
+        TextPart(imageAnalysisPrompt),
+        DataPart(mimeType ?? 'image/jpeg', imageBytes!),
+      ]),
+    ];
+
+    final response = await model.generateContent(content);
+    return response.text;
   }
 
   /// Fetches meme suggestions from the AI based on context.

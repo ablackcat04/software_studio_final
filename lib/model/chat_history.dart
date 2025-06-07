@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:uuid/uuid.dart';
 
 class ChatHistory {
@@ -16,6 +18,11 @@ class ChatHistory {
   List<ChatMessage> messages;
   Map<String, bool> activateFolder = {'Favorite': true, 'Mygo': true};
   bool hasSetup;
+  Uint8List? imageBytes;
+
+  void setImage(Uint8List _imageBytes) {
+    imageBytes = _imageBytes;
+  }
 
   String toPromptString() {
     // Use .map to transform each ChatMessage into a formatted string
