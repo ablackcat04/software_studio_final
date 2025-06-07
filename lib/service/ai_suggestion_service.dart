@@ -9,11 +9,15 @@ class AnalysisResult {
   /// True if the AI determines a new guide is needed based on the conversation's shift.
   final bool shouldRegenerateGuide;
 
-  /// A brief summary of the user's current intention if a new guide is NOT needed.
-  /// This can be null if regeneration is required.
-  final String? userIntention;
+  /// A brief summary of the user's current intention.
+  /// - If `shouldRegenerateGuide` is `false`, this describes the ongoing intent.
+  /// - If `shouldRegenerateGuide` is `true`, this explains WHY a new guide is needed.
+  final String userIntention;
 
-  AnalysisResult({required this.shouldRegenerateGuide, this.userIntention});
+  AnalysisResult({
+    required this.shouldRegenerateGuide,
+    required this.userIntention,
+  });
 }
 
 class AiSuggestionService {
@@ -82,13 +86,13 @@ Ensure the generated intentions are distinct within each category and plausible 
 
   final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  // --- NEW METHOD TO ANALYZE HISTORY ---
+  // --- UPDATED METHOD TO ANALYZE HISTORY ---
 
   /// Analyzes the chat history to decide if the suggestion guide needs regeneration.
   ///
   /// This is the first step in the suggestion pipeline.
   /// It returns an [AnalysisResult] indicating whether to regenerate the guide
-  /// and, if not, a summary of the user's current intention.
+  /// and providing a reason/summary of the user's current intention.
   Future<AnalysisResult> decideOnGuideRegeneration({
     required ChatHistoryNotifier notifier,
   }) async {
@@ -97,7 +101,6 @@ Ensure the generated intentions are distinct within each category and plausible 
     }
 
     final model = GenerativeModel(
-      // Using the same fast model as requested
       model: 'gemini-2.5-flash-preview-05-20',
       apiKey: _apiKey,
     );
@@ -112,6 +115,7 @@ Ensure the generated intentions are distinct within each category and plausible 
       );
     }
 
+    // *** PROMPT MODIFIED HERE ***
     final prompt = """
 You are an intelligent chat history analyzer.
 Your task is to determine if the user's focus or intention in the conversation has shifted enough to require generating a new "Meme Suggestion Guide".
@@ -120,17 +124,18 @@ Analyze the provided chat history.
 
 - If the conversation's topic, sentiment, or goal has clearly changed (e.g., from happy topics to sad, from asking about one character to another), you must decide to regenerate the guide.
 - If the conversation is just continuing along the same path, do not regenerate the guide.
-- If the history is very short (2-3 messages), it's usually too early to tell, so do not regenerate the guide unless there's a very sharp, explicit turn.
 
 You MUST respond in a valid JSON format only, with no other text before or after the JSON block.
 The JSON object must have two keys:
 1. "regenerate_guide": A boolean (true or false).
-2. "intention": A string. If "regenerate_guide" is true, this should be null. If false, provide a very brief, one-sentence summary of the user's current intention.
+2. "intention": A string, which must ALWAYS be populated.
+   - If "regenerate_guide" is `true`, this string should briefly explain WHY regeneration is needed (e.g., "Topic shifted from planning to expressing sadness.").
+   - If "regenerate_guide" is `false`, this string should be a brief, one-sentence summary of the user's current intention (e.g., "User wants to express agreement and happiness.").
 
 Example 1 (Regeneration needed):
 {
   "regenerate_guide": true,
-  "intention": null
+  "intention": "The topic has shifted from general greetings to a serious discussion about a problem."
 }
 
 Example 2 (Continuation):
@@ -154,7 +159,6 @@ $history
     }
 
     try {
-      // Find the JSON block in case the model adds extra text like ```json
       final jsonRegex = RegExp(r'\{.*\}', dotAll: true);
       final match = jsonRegex.firstMatch(aiResponseText);
       if (match == null) {
@@ -163,9 +167,12 @@ $history
       final jsonString = match.group(0)!;
       final Map<String, dynamic> parsedJson = jsonDecode(jsonString);
 
+      // *** PARSING LOGIC UPDATED HERE ***
       return AnalysisResult(
         shouldRegenerateGuide: parsedJson['regenerate_guide'] ?? false,
-        userIntention: parsedJson['intention'],
+        userIntention:
+            parsedJson['intention'] ??
+            "Analysis failed: No intention provided.",
       );
     } catch (e) {
       print("Failed to parse JSON from AI analysis: $aiResponseText");
@@ -188,7 +195,6 @@ $history
     final memeDatabase = await _loadMemeDatabase();
     String databaseString = '';
 
-    // Convert the database map to a string format for the prompt
     for (var entry in memeDatabase.entries) {
       databaseString += "${entry.key}: ${entry.value.toString()}\n\n";
     }
@@ -200,9 +206,11 @@ You are a specialized analysis component within an AI Meme Suggestion App's
 processing pipeline. Your primary function is to follow a provided meme 
 suggestion guide and find suitable meme from the database, 
 the database is in ID: description. 
+Sometimes, you will be given some conclution of the user's intension of the conversation, 
+which means this is a regeneration for the guide, be sure to follow it so the user will be happy.
 Your output will only consist $optionNumber ID, separated by a newline. 
 The suggestion mode now is $mode. The database is provided below. 
-Thinking should be concise since speed is critical in this task.
+You Should think through one by one to ensure quality, but thinking should be concise since speed is very critical in this task.
 
 ------------------------------------------------------------------------------
 $databaseString
@@ -212,6 +220,7 @@ $databaseString
   Future<String?> generateGuide({
     required Uint8List? imageBytes,
     required String? mimeType,
+    required String intension,
   }) async {
     final model = GenerativeModel(
       model: 'gemini-2.5-flash-preview-05-20',
@@ -219,7 +228,9 @@ $databaseString
     );
     final content = [
       Content.multi([
-        TextPart(imageAnalysisPrompt),
+        TextPart(
+          '$imageAnalysisPrompt\n\nHere is some conculsion of the user\'s intension: \n$intension',
+        ),
         DataPart(mimeType ?? 'image/jpeg', imageBytes!),
       ]),
     ];
@@ -229,10 +240,6 @@ $databaseString
   }
 
   /// Fetches meme suggestions from the AI based on context.
-  ///
-  /// This is the second step in the suggestion pipeline, executed after a
-  /// guide has been chosen (either a new one or an existing one).
-  /// Throws an exception if the API call fails or returns no content.
   Future<List<String>> getMemeSuggestions({
     required String guide,
     required String userInput,
@@ -253,10 +260,8 @@ $databaseString
       apiKey: _apiKey,
     );
 
-    // Get chat history for better suggestion
     final history = notifier.currentChatHistory.toPromptString();
 
-    // Build the two parts of our prompt
     final systemPrompt = await _buildSystemPrompt(aiMode, optionNumber);
     final userRequestPrompt =
         "This is the guide, $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'. Provide $optionNumber image IDs based on this.\nThis is the current dialogue history: $history";
@@ -265,7 +270,7 @@ $databaseString
       Content.multi([TextPart(systemPrompt), TextPart(userRequestPrompt)]),
     ];
 
-    print(systemPrompt);
+    // print(systemPrompt);
     print(userRequestPrompt);
 
     final response = await model.generateContent(content);
@@ -275,7 +280,6 @@ $databaseString
       throw Exception("AI did not return any suggestions.");
     }
 
-    // Parse the response to get image paths
     final lines =
         aiResponseText
             .trim()

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/model/chat_history.dart';
@@ -75,6 +74,8 @@ class _UploadPageState extends State<UploadPage> {
       final aiGuideText = await _aiService.generateGuide(
         imageBytes: imageBytes,
         mimeType: image.mimeType,
+        intension:
+            "This is the first generation, no intension provided now, do your best!",
       );
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
