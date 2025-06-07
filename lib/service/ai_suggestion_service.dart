@@ -45,6 +45,44 @@ class MemeSuggestion {
 }
 
 class AiSuggestionService {
+  Future<String> nameHistory({required String history}) async {
+    if (_apiKey.isEmpty) {
+      throw Exception("Gemini API key not found.");
+    }
+
+    final model = GenerativeModel(
+      model: 'gemini-2.5-flash-preview-05-20',
+      apiKey: _apiKey,
+    );
+
+    final prompt = """
+You are a '梗王' (Meme Lord), a master of creating witty and punchy one-liners.
+Your job is to give this chat a funny, meme-worthy title in **繁體中文**.
+
+The title must capture the essence or the punchline of the conversation.
+No boring, generic names! Think like a viral social media post title.
+
+- **Strictly** 10 characters or less.
+- **繁體中文** only.
+- Output the title directly.
+
+Chat History:
+---
+$history
+---
+""";
+
+    final content = [Content.text(prompt)];
+    final response = await model.generateContent(content);
+    final aiResponseText = response.text;
+
+    if (aiResponseText == null || aiResponseText.trim().isEmpty) {
+      throw Exception("AI analysis did not return a valid response.");
+    }
+
+    return aiResponseText;
+  }
+
   static const String imageAnalysisPrompt = """
 Your Role:
 

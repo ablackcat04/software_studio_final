@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/page/chat_page.dart';
-import 'package:software_studio_final/page/go_page.dart';
 import 'package:software_studio_final/page/upload_page.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';

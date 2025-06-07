@@ -59,6 +59,7 @@ class _ChatPageState extends State<ChatPage> {
       } else {
         setState(() => mstate = MainState.conversation);
       }
+      chatHistoryNotifier.currentChatHistory.renameHistory();
     });
   }
 
