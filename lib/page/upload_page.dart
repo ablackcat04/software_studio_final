@@ -154,13 +154,29 @@ class _UploadPageState extends State<UploadPage> {
         // Use the existing `currentGuide`
       }
 
-      final List<String> imagePaths = await _aiService.getMemeSuggestions(
-        guide: guide,
-        userInput: userInput,
-        aiMode: currentAIMode,
-        optionNumber: optionNumber,
-        notifier: chatHistoryNotifier,
-      );
+      final List<MemeSuggestion> suggestions = await _aiService
+          .getMemeSuggestions(
+            guide: guide,
+            userInput: userInput,
+            aiMode: currentAIMode,
+            optionNumber: optionNumber,
+            notifier: chatHistoryNotifier,
+          );
+
+      final List<String> imagePaths =
+          suggestions.map((suggestion) => suggestion.imagePath).toList();
+
+      // 3. (IMPORTANT) You can do the same to get a list of the reasons!
+      //    You will need this list to display the reasons in your UI.
+      final List<String> reasons =
+          suggestions.map((suggestion) => suggestion.reason).toList();
+
+      for (final a in reasons) {
+        print(a);
+      }
+
+      // Now you can use the `imagePaths` list just like you did before.
+      // And you have a corresponding `reasons` list to show the user why each meme was suggested.
 
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
