@@ -144,8 +144,12 @@ class _ChatPageState extends State<ChatPage> {
 
         if (aiGuideText != null && aiGuideText.isNotEmpty) {
           guideNotifier.setGuide(aiGuideText);
+          chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
           chatHistoryNotifier.addMessage(
-            ChatMessage(isAI: true, content: aiGuideText),
+            ChatMessage(
+              isAI: true,
+              content: chatHistoryNotifier.currentChatHistory.guide ?? '',
+            ),
           );
           print(aiGuideText);
         } else {
@@ -153,6 +157,7 @@ class _ChatPageState extends State<ChatPage> {
             ChatMessage(isAI: true, content: 'AI無法生成建議指南，模型未返回文本。'),
           );
         }
+        _scrollToBottom();
       } else {
         print(
           "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",

@@ -80,8 +80,12 @@ class _UploadPageState extends State<UploadPage> {
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
         guideNotifier.setGuide(aiGuideText);
+        chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
         chatHistoryNotifier.addMessage(
-          ChatMessage(isAI: true, content: aiGuideText),
+          ChatMessage(
+            isAI: true,
+            content: chatHistoryNotifier.currentChatHistory.guide ?? '',
+          ),
         );
       } else {
         chatHistoryNotifier.addMessage(
@@ -132,27 +136,12 @@ class _UploadPageState extends State<UploadPage> {
 
     try {
       final guide = guideNotifier.guide;
-      // Assuming AIModeSwitch updates the currentMode in GuideNotifier
       final currentAIMode = guideNotifier.mode;
       final optionNumber = settingsNotifier.settings.optionNumber;
 
       final analysisResult = await _aiService.decideOnGuideRegeneration(
         notifier: chatHistoryNotifier,
       );
-
-      if (analysisResult.shouldRegenerateGuide) {
-        print("AI decided to regenerate the guide.");
-        // You would now make another AI call to generate a *new* guide
-        // This is a separate prompt/function you'd need to create.
-        // For example: currentGuide = await generateNewGuide(chatHistoryNotifier);
-        // currentGuide =
-        //     "A new guide based on the changed conversation about sad topics."; // Placeholder
-      } else {
-        print(
-          "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
-        );
-        // Use the existing `currentGuide`
-      }
 
       final List<MemeSuggestion> suggestions = await _aiService
           .getMemeSuggestions(
