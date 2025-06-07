@@ -18,19 +18,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
   ChatHistoryNotifier() {
     newChat();
     currentSetup();
-    // addMessage(ChatMessage(isAI: false, content: 'Old message 1', images: []));
-    // addMessage(
-    //   ChatMessage(
-    //     isAI: true,
-    //     content: '',
-    //     images: ['images/basic/1.jpg', 'images/basic/2.jpg'],
-    //   ),
-    // );
-
-    // newChat();
-    // currentSetup();
-    // addMessage(ChatMessage(isAI: false, content: 'Another chat', images: []));
-    // newChat();
   }
 
   void newChat() {

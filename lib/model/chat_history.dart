@@ -21,8 +21,14 @@ class ChatHistory {
   bool hasSetup;
   Uint8List? imageBytes;
 
+  String? guide;
+
   void setImage(Uint8List _imageBytes) {
     imageBytes = _imageBytes;
+  }
+
+  void setGuide(String newGuide) {
+    guide = newGuide;
   }
 
   String toPromptString() {
