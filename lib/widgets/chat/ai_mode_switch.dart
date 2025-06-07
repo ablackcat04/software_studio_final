@@ -10,7 +10,7 @@ class AIModeSwitch extends StatefulWidget {
 }
 
 class _AIModeSwitchState extends State<AIModeSwitch> {
-  final List<bool> _isSelected = [
+  List<bool> _isSelected = [
     true,
     false,
     false,
@@ -41,6 +41,17 @@ class _AIModeSwitchState extends State<AIModeSwitch> {
       color: Theme.of(context).colorScheme.inverseSurface,
       fontSize: 16,
     );
+
+    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
+    if (guideNotifier.mode == '一般') {
+      _isSelected = [true, false, false, false];
+    } else if (guideNotifier.mode == '已讀亂回 (回一些好像有關係但有好像沒關係的，莫名其妙的)') {
+      _isSelected = [false, true, false, false];
+    } else if (guideNotifier.mode == '假正經 (一本正經的講幹話)') {
+      _isSelected = [false, false, true, false];
+    } else if (guideNotifier.mode == '關鍵字 (像是"春"for"春日影")') {
+      _isSelected = [false, false, false, true];
+    }
 
     return Padding(
       padding: EdgeInsets.all(8.0),
