@@ -133,7 +133,7 @@ Ensure the generated intentions are distinct within each category and plausible 
     try {
       final Uint8List imageBytes = await image.readAsBytes();
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-2.5-flash-preview-05-20',
         apiKey: apiKey,
       );
       final content = [
@@ -204,11 +204,30 @@ Ensure the generated intentions are distinct within each category and plausible 
       final currentAIMode = "一般";
       final optionNumber = settingsNotifier.settings.optionNumber;
 
+      final analysisResult = await _aiService.decideOnGuideRegeneration(
+        notifier: chatHistoryNotifier,
+      );
+
+      if (analysisResult.shouldRegenerateGuide) {
+        print("AI decided to regenerate the guide.");
+        // You would now make another AI call to generate a *new* guide
+        // This is a separate prompt/function you'd need to create.
+        // For example: currentGuide = await generateNewGuide(chatHistoryNotifier);
+        // currentGuide =
+        //     "A new guide based on the changed conversation about sad topics."; // Placeholder
+      } else {
+        print(
+          "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
+        );
+        // Use the existing `currentGuide`
+      }
+
       final List<String> imagePaths = await _aiService.getMemeSuggestions(
         guide: guide,
         userInput: userInput,
         aiMode: currentAIMode,
         optionNumber: optionNumber,
+        notifier: chatHistoryNotifier,
       );
 
       chatHistoryNotifier.addMessage(

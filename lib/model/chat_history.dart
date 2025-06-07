@@ -17,6 +17,29 @@ class ChatHistory {
   Map<String, bool> activateFolder = {'Favorite': true, 'Mygo': true};
   bool hasSetup;
 
+  String toPromptString() {
+    // Use .map to transform each ChatMessage into a formatted string
+    // and .join to combine them into a single string.
+    return messages
+        .map((message) {
+          // Determine the speaker's prefix based on the isAI flag.
+          final speaker = message.isAI ? 'AI' : 'USER';
+
+          // Check if there are any images and create a placeholder text if so.
+          final imageIndicator =
+              (message.images != null && message.images!.isNotEmpty)
+                  ? ' [Image Attached]'
+                  : '';
+
+          // Combine the parts into a single line for this message.
+          // The trim() on content handles cases where it might have leading/trailing whitespace.
+          return '$speaker:$imageIndicator ${message.content.trim()}';
+        })
+        .join(
+          '\n\n',
+        ); // Join all message strings with a double newline for readability.
+  }
+
   ChatHistory copyWith({
     String? name,
     DateTime? createdAt,
