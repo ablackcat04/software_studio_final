@@ -133,7 +133,7 @@ class _UploadPageState extends State<UploadPage> {
     try {
       final guide = guideNotifier.guide;
       // Assuming AIModeSwitch updates the currentMode in GuideNotifier
-      final currentAIMode = "一般";
+      final currentAIMode = guideNotifier.mode;
       final optionNumber = settingsNotifier.settings.optionNumber;
 
       final analysisResult = await _aiService.decideOnGuideRegeneration(
@@ -179,7 +179,7 @@ class _UploadPageState extends State<UploadPage> {
       // And you have a corresponding `reasons` list to show the user why each meme was suggested.
 
       chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
+        ChatMessage(isAI: true, content: "給你的梗圖建議:", suggestions: suggestions),
       );
 
       chatHistoryNotifier.currentSetup();

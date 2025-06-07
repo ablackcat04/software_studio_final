@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:software_studio_final/state/guide_notifier.dart';
 
 class AIModeSwitch extends StatefulWidget {
   const AIModeSwitch({super.key});
@@ -21,6 +23,16 @@ class _AIModeSwitchState extends State<AIModeSwitch> {
         _isSelected[i] = i == index;
       }
     });
+    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
+    if (index == 0) {
+      guideNotifier.setMode('一般');
+    } else if (index == 1) {
+      guideNotifier.setMode('已讀亂回 (回一些好像有關係但有好像沒關係的，莫名其妙的)');
+    } else if (index == 2) {
+      guideNotifier.setMode('假正經 (一本正經的講幹話)');
+    } else if (index == 3) {
+      guideNotifier.setMode('關鍵字 (像是"春"for"春日影")');
+    }
   }
 
   @override

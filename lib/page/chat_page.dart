@@ -116,7 +116,7 @@ class _ChatPageState extends State<ChatPage> {
 
     try {
       final guide = guideNotifier.guide;
-      final currentAIMode = "一般";
+      final currentAIMode = guideNotifier.mode;
       final optionNumber = settingsNotifier.getoptionnumbers();
 
       final analysisResult = await _aiService.decideOnGuideRegeneration(
@@ -187,7 +187,7 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
+        ChatMessage(isAI: true, content: "給你的梗圖建議:", suggestions: suggestions),
       );
     } catch (e) {
       print('Error in _onSendPressed with service: $e');
@@ -280,7 +280,7 @@ class _ChatPageState extends State<ChatPage> {
               final message = messages[index];
               if (message.isAI) {
                 return AIMessage(
-                  imagePaths: message.images,
+                  suggestions: message.suggestions,
                   // messageContent: message.content, // Pass content as well
                 );
               } else {

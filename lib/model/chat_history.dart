@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:software_studio_final/service/ai_suggestion_service.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatHistory {
@@ -33,14 +34,14 @@ class ChatHistory {
           final speaker = message.isAI ? 'AI' : 'USER';
 
           // Check if there are any images and create a placeholder text if so.
-          final imageIndicator =
-              (message.images != null && message.images!.isNotEmpty)
-                  ? ' [Image Attached]'
-                  : '';
+          // final imageIndicator =
+          //     (message.suggestions != null && message.images!.isNotEmpty)
+          //         ? ' [Image Attached]'
+          //         : '';
 
           // Combine the parts into a single line for this message.
           // The trim() on content handles cases where it might have leading/trailing whitespace.
-          return '$speaker:$imageIndicator ${message.content.trim()}';
+          return '$speaker: ${message.content.trim()}';
         })
         .join(
           '\n\n',
@@ -63,17 +64,22 @@ class ChatHistory {
 }
 
 class ChatMessage {
-  ChatMessage({required this.isAI, required this.content, this.images});
+  ChatMessage({required this.isAI, required this.content, this.suggestions});
 
   bool isAI;
   String content;
-  List<String>? images;
+  // List<String>? images;
+  List<MemeSuggestion>? suggestions;
+
+  List<MemeSuggestion>? getSuggestions() {
+    return suggestions;
+  }
 
   ChatMessage copyWith({bool? isAI, String? content, List<String>? images}) {
     return ChatMessage(
       isAI: isAI ?? this.isAI,
       content: content ?? this.content,
-      images: images ?? this.images,
+      suggestions: suggestions ?? suggestions,
     );
   }
 }

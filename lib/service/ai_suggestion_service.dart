@@ -28,6 +28,14 @@ class MemeSuggestion {
   /// The AI-generated explanation for why this meme was suggested.
   final String reason;
 
+  String getImagePath() {
+    return imagePath;
+  }
+
+  String getReason() {
+    return reason;
+  }
+
   MemeSuggestion({required this.imagePath, required this.reason});
 
   @override
@@ -214,6 +222,8 @@ $history
     for (var entry in memeDatabase.entries) {
       databaseString += "${entry.key}: ${entry.value.toString()}\n\n";
     }
+
+    print('現在的模式：$mode');
 
     return """
 Your Role:

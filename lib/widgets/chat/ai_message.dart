@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:software_studio_final/service/ai_suggestion_service.dart';
 import 'package:software_studio_final/widgets/copy_button.dart';
 import 'package:software_studio_final/widgets/favorite_button.dart';
+import 'package:software_studio_final/widgets/info_button.dart';
 
 class AIMessage extends StatelessWidget {
-  final List<String>? imagePaths;
+  final List<MemeSuggestion>? suggestions;
 
-  const AIMessage({super.key, required this.imagePaths});
+  const AIMessage({super.key, required this.suggestions});
 
   @override
   Widget build(BuildContext context) {
+    // final imagePaths =
+    //     suggestions?.map((suggestion) => suggestion.imagePath).toList();
+
     final screenWidth = MediaQuery.of(context).size.width;
     final imageSize = screenWidth * 0.375;
     final theme = Theme.of(context);
 
-    if (imagePaths == null) {
+    if (suggestions == null) {
       return SizedBox(height: 10, width: 10);
     } else {
       return Padding(
@@ -33,12 +38,12 @@ class AIMessage extends StatelessWidget {
               spacing: 8.0,
               runSpacing: 8.0,
               children:
-                  imagePaths!.map((imagePath) {
+                  suggestions!.map((suggest) {
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          imagePath,
+                          suggest.imagePath,
                           width: imageSize,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
@@ -58,12 +63,17 @@ class AIMessage extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                CopyButton(imagePath: imagePath),
+                                CopyButton(imagePath: suggest.imagePath),
                                 const SizedBox(width: 8),
                                 FavoriteButton(
-                                  id: imagePath, // 使用圖片路徑作為唯一的 ID
-                                  imageUrl: imagePath,
+                                  id: suggest.imagePath, // 使用圖片路徑作為唯一的 ID
+                                  imageUrl: suggest.imagePath,
                                   title: "Image", // 可以根據需求修改標題
+                                ),
+                                const SizedBox(width: 8),
+                                ReasonButton(
+                                  reason: suggest.reason,
+                                  imagePath: suggest.imagePath,
                                 ),
                               ],
                             ),
