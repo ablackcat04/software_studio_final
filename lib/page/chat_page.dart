@@ -1,5 +1,6 @@
 // lib/pages/chat_page.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/model/chat_history.dart';
@@ -125,11 +126,28 @@ class _ChatPageState extends State<ChatPage> {
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: '正在重新生成推薦指南'),
         );
-        // You would now make another AI call to generate a *new* guide
-        // This is a separate prompt/function you'd need to create.
-        // For example: currentGuide = await generateNewGuide(chatHistoryNotifier);
-        // currentGuide =
-        //     "A new guide based on the changed conversation about sad topics."; // Placeholder
+        print('AI正在重新生成推薦指南');
+
+        Uint8List? imageBytes =
+            chatHistoryNotifier.currentChatHistory.imageBytes;
+
+        final aiGuideText = await _aiService.generateGuide(
+          imageBytes: imageBytes,
+          mimeType: null,
+        );
+        print('AI完成重新生成推薦指南');
+
+        if (aiGuideText != null && aiGuideText.isNotEmpty) {
+          guideNotifier.setGuide(aiGuideText);
+          chatHistoryNotifier.addMessage(
+            ChatMessage(isAI: true, content: aiGuideText),
+          );
+          print(aiGuideText);
+        } else {
+          chatHistoryNotifier.addMessage(
+            ChatMessage(isAI: true, content: '無法生成建議指南，模型未返回文本。'),
+          );
+        }
       } else {
         print(
           "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
