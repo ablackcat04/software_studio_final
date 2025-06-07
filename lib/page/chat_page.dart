@@ -108,7 +108,7 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
+      ChatMessage(isAI: true, content: '正在判斷是否需重新生成推薦指南...'),
     );
     _scrollToBottom();
 
@@ -117,11 +117,36 @@ class _ChatPageState extends State<ChatPage> {
       final currentAIMode = "一般";
       final optionNumber = settingsNotifier.getoptionnumbers();
 
+      final analysisResult = await _aiService.decideOnGuideRegeneration(
+        notifier: chatHistoryNotifier,
+      );
+
+      if (analysisResult.shouldRegenerateGuide) {
+        chatHistoryNotifier.addMessage(
+          ChatMessage(isAI: true, content: '正在重新生成推薦指南'),
+        );
+        // You would now make another AI call to generate a *new* guide
+        // This is a separate prompt/function you'd need to create.
+        // For example: currentGuide = await generateNewGuide(chatHistoryNotifier);
+        // currentGuide =
+        //     "A new guide based on the changed conversation about sad topics."; // Placeholder
+      } else {
+        print(
+          "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
+        );
+        // Use the existing `currentGuide`
+      }
+
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
+      );
+
       final List<String> imagePaths = await _aiService.getMemeSuggestions(
         guide: guide,
         userInput: userInput,
         aiMode: currentAIMode,
         optionNumber: optionNumber,
+        notifier: chatHistoryNotifier,
       );
 
       chatHistoryNotifier.addMessage(
