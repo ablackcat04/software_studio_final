@@ -109,8 +109,9 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: true, content: '正在判斷是否需重新生成推薦指南...'),
+      ChatMessage(isAI: false, content: 'AI正在判斷是否需重新生成推薦指南...'),
     );
+    print('AI正在判斷是否需重新生成推薦指南');
     _scrollToBottom();
 
     try {
@@ -124,7 +125,7 @@ class _ChatPageState extends State<ChatPage> {
 
       if (analysisResult.shouldRegenerateGuide) {
         chatHistoryNotifier.addMessage(
-          ChatMessage(isAI: true, content: '正在重新生成推薦指南'),
+          ChatMessage(isAI: false, content: 'AI正在重新生成推薦指南'),
         );
         print('AI正在重新生成推薦指南');
 
@@ -134,6 +135,7 @@ class _ChatPageState extends State<ChatPage> {
         final aiGuideText = await _aiService.generateGuide(
           imageBytes: imageBytes,
           mimeType: null,
+          intension: analysisResult.userIntention,
         );
         print('AI完成重新生成推薦指南');
 
@@ -145,7 +147,7 @@ class _ChatPageState extends State<ChatPage> {
           print(aiGuideText);
         } else {
           chatHistoryNotifier.addMessage(
-            ChatMessage(isAI: true, content: '無法生成建議指南，模型未返回文本。'),
+            ChatMessage(isAI: false, content: 'AI無法生成建議指南，模型未返回文本。'),
           );
         }
       } else {
