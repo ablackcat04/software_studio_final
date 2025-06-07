@@ -6,20 +6,37 @@ import 'package:software_studio_final/widgets/info_button.dart';
 
 class AIMessage extends StatelessWidget {
   final List<MemeSuggestion>? suggestions;
+  final String? messageContent;
 
-  const AIMessage({super.key, required this.suggestions});
+  const AIMessage({super.key, required this.suggestions, this.messageContent});
 
   @override
   Widget build(BuildContext context) {
-    // final imagePaths =
-    //     suggestions?.map((suggestion) => suggestion.imagePath).toList();
-
     final screenWidth = MediaQuery.of(context).size.width;
     final imageSize = screenWidth * 0.375;
     final theme = Theme.of(context);
 
-    if (suggestions == null) {
-      return SizedBox(height: 10, width: 10);
+    if (suggestions == null && messageContent != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              messageContent!,
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ),
+      );
     } else {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),

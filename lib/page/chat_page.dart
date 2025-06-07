@@ -110,9 +110,8 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: false, content: 'AI正在判斷是否需重新生成推薦指南...'),
+      ChatMessage(isAI: true, content: 'AI正在判斷是否需重新生成推薦指南...'),
     );
-    print('AI正在判斷是否需重新生成推薦指南');
     _scrollToBottom();
 
     try {
@@ -126,9 +125,9 @@ class _ChatPageState extends State<ChatPage> {
 
       if (analysisResult.shouldRegenerateGuide) {
         chatHistoryNotifier.addMessage(
-          ChatMessage(isAI: false, content: 'AI正在重新生成推薦指南'),
+          ChatMessage(isAI: true, content: 'AI正在重新生成推薦指南'),
         );
-        print('AI正在重新生成推薦指南');
+        _scrollToBottom();
 
         Uint8List? imageBytes =
             chatHistoryNotifier.currentChatHistory.imageBytes;
@@ -138,7 +137,10 @@ class _ChatPageState extends State<ChatPage> {
           mimeType: null,
           intension: analysisResult.userIntention,
         );
-        print('AI完成重新生成推薦指南');
+        chatHistoryNotifier.addMessage(
+          ChatMessage(isAI: true, content: 'AI完成重新生成推薦指南'),
+        );
+        _scrollToBottom();
 
         if (aiGuideText != null && aiGuideText.isNotEmpty) {
           guideNotifier.setGuide(aiGuideText);
@@ -148,22 +150,20 @@ class _ChatPageState extends State<ChatPage> {
           print(aiGuideText);
         } else {
           chatHistoryNotifier.addMessage(
-            ChatMessage(isAI: false, content: 'AI無法生成建議指南，模型未返回文本。'),
+            ChatMessage(isAI: true, content: 'AI無法生成建議指南，模型未返回文本。'),
           );
         }
       } else {
         print(
           "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
         );
-        // Use the existing `currentGuide`
       }
 
       chatHistoryNotifier.addMessage(
-        ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
+        ChatMessage(isAI: true, content: 'AI正在尋找最適合的梗圖...'),
       );
+      _scrollToBottom();
 
-      // 1. Get the list of suggestion objects from the AI service.
-      //    (Variable renamed to 'suggestions' for clarity)
       final List<MemeSuggestion> suggestions = await _aiService
           .getMemeSuggestions(
             guide: guide,
@@ -173,23 +173,10 @@ class _ChatPageState extends State<ChatPage> {
             notifier: chatHistoryNotifier,
           );
 
-      // 2. Create the list of image path strings using the .map() method.
-      //    This iterates through each 'MemeSuggestion' and pulls out the 'imagePath' property.
-      final List<String> imagePaths =
-          suggestions.map((suggestion) => suggestion.imagePath).toList();
-
-      // 3. (IMPORTANT) You can do the same to get a list of the reasons!
-      //    You will need this list to display the reasons in your UI.
-      final List<String> reasons =
-          suggestions.map((suggestion) => suggestion.reason).toList();
-
-      for (final a in reasons) {
-        print(a);
-      }
-
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: "給你的梗圖建議:", suggestions: suggestions),
       );
+      _scrollToBottom();
     } catch (e) {
       print('Error in _onSendPressed with service: $e');
       final errorMessage = 'AI回覆時發生錯誤：\n${e.toString()}';
@@ -214,10 +201,6 @@ class _ChatPageState extends State<ChatPage> {
 
   void _onNewChatPressed() {
     Provider.of<ChatHistoryNotifier>(context, listen: false).newChat();
-    // Provider.of<GuideNotifier>(
-    //   context,
-    //   listen: false,
-    // ).clearGuide(); // Assuming you add a clear method
     setState(() {
       mstate = MainState.blank;
       _textController.clear();
@@ -282,7 +265,7 @@ class _ChatPageState extends State<ChatPage> {
               if (message.isAI) {
                 return AIMessage(
                   suggestions: message.suggestions,
-                  // messageContent: message.content, // Pass content as well
+                  messageContent: message.content,
                 );
               } else {
                 return UserMessage(messageContent: message.content);
