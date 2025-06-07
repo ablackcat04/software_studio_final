@@ -20,6 +20,22 @@ class AnalysisResult {
   });
 }
 
+/// A data class to hold a single meme suggestion, including the reason.
+class MemeSuggestion {
+  /// The local asset path to the suggested meme image.
+  final String imagePath;
+
+  /// The AI-generated explanation for why this meme was suggested.
+  final String reason;
+
+  MemeSuggestion({required this.imagePath, required this.reason});
+
+  @override
+  String toString() {
+    return 'MemeSuggestion(imagePath: $imagePath, reason: $reason)';
+  }
+}
+
 class AiSuggestionService {
   static const String imageAnalysisPrompt = """
 Your Role:
@@ -190,7 +206,7 @@ $history
     return jsonDecode(jsonString);
   }
 
-  // Private helper to build the system prompt
+  // This function is updated to instruct the AI to provide a reason in JSON format.
   Future<String> _buildSystemPrompt(String mode, int optionNumber) async {
     final memeDatabase = await _loadMemeDatabase();
     String databaseString = '';
@@ -201,18 +217,31 @@ $history
 
     return """
 Your Role:
+You are a specialized analysis component within an AI Meme Suggestion App's processing pipeline. Your task is to analyze the user's request and the provided guide to select the most suitable memes from a database. The database format is ID: description.
 
-You are a specialized analysis component within an AI Meme Suggestion App's 
-processing pipeline. Your primary function is to follow a provided meme 
-suggestion guide and find suitable meme from the database, 
-the database is in ID: description. 
-Sometimes, you will be given some conclution of the user's intension of the conversation, 
-which means this is a regeneration for the guide, be sure to follow it so the user will be happy.
-Your output will only consist $optionNumber ID, separated by a newline. 
-The suggestion mode now is $mode. The database is provided below. 
-You Should think through one by one to ensure quality, but thinking should be concise since speed is very critical in this task.
+The current suggestion mode is '$mode'.
 
-------------------------------------------------------------------------------
+**CRITICAL: Your Output Format**
+You MUST respond with a valid JSON array only. Do not include any text, notes, or markdown formatting before or after the JSON block.
+The array should contain exactly $optionNumber objects.
+Each object in the array represents a single meme suggestion and MUST have two keys:
+1.  `"id"`: A string containing the exact ID of the meme from the database.
+2.  `"reason"`: A concise, user-facing string (in Traditional Chinese) explaining WHY this meme is a good suggestion for the current context.
+
+**Example of a valid response for 2 options:**
+```json
+[
+  {
+    "id": "mygo_01",
+    "reason": "這張圖很適合用來表達對話中提到的困惑或不解。"
+  },
+  {
+    "id": "mygo_25",
+    "reason": "可以用這張迷因來輕鬆地表示同意，緩和氣氛。"
+  }
+]
+You should think through your choices to ensure high quality. Your reasoning will be shown directly to the user, so make it clear, helpful, and concise.
+Meme Database:
 $databaseString
 """;
   }
@@ -239,8 +268,7 @@ $databaseString
     return response.text;
   }
 
-  /// Fetches meme suggestions from the AI based on context.
-  Future<List<String>> getMemeSuggestions({
+  Future<List<MemeSuggestion>> getMemeSuggestions({
     required String guide,
     required String userInput,
     required String aiMode,
@@ -261,17 +289,13 @@ $databaseString
     );
 
     final history = notifier.currentChatHistory.toPromptString();
-
     final systemPrompt = await _buildSystemPrompt(aiMode, optionNumber);
     final userRequestPrompt =
-        "This is the guide, $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'. Provide $optionNumber image IDs based on this.\nThis is the current dialogue history: $history";
+        "This is the guide, $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'. Provide $optionNumber meme suggestions based on this.\nThis is the current dialogue history: $history";
 
     final content = [
       Content.multi([TextPart(systemPrompt), TextPart(userRequestPrompt)]),
     ];
-
-    // print(systemPrompt);
-    print(userRequestPrompt);
 
     final response = await model.generateContent(content);
     final aiResponseText = response.text;
@@ -280,24 +304,55 @@ $databaseString
       throw Exception("AI did not return any suggestions.");
     }
 
-    final lines =
-        aiResponseText
-            .trim()
-            .split('\n')
-            .where((line) => line.trim().isNotEmpty)
-            .toList();
+    try {
+      // Find the JSON array within the response, stripping any surrounding text or markdown.
+      final jsonRegex = RegExp(r'\[.*\]', dotAll: true);
+      final match = jsonRegex.firstMatch(aiResponseText);
+      if (match == null) {
+        throw FormatException("No valid JSON array found in AI response.");
+      }
+      final jsonString = match.group(0)!;
 
-    print(lines);
+      // Decode the JSON string into a List of dynamic objects
+      final List<dynamic> parsedJson = jsonDecode(jsonString);
 
-    if (lines.isEmpty) {
+      // Map the parsed JSON objects into our MemeSuggestion data class
+      final List<MemeSuggestion> suggestions =
+          parsedJson
+              .map((item) {
+                if (item is Map<String, dynamic> &&
+                    item.containsKey('id') &&
+                    item.containsKey('reason')) {
+                  final id = item['id'] as String;
+                  final reason = item['reason'] as String;
+                  return MemeSuggestion(
+                    imagePath:
+                        'images/basic/$id.jpg', // Convert ID to full path
+                    reason: reason,
+                  );
+                } else {
+                  // Handle cases where an item in the array is malformed
+                  print("Warning: Malformed item in AI response: $item");
+                  return null;
+                }
+              })
+              .whereType<MemeSuggestion>()
+              .toList(); // Filter out any nulls
+
+      if (suggestions.isEmpty) {
+        throw Exception(
+          "Parsed suggestions list is empty, despite receiving a response.",
+        );
+      }
+
+      return suggestions;
+    } catch (e) {
+      print(
+        "Failed to parse JSON from AI suggestion response: $aiResponseText",
+      );
       throw Exception(
-        "Could not parse image IDs from AI response: $aiResponseText",
+        "Could not parse suggestions from AI response. Error: $e",
       );
     }
-
-    final List<String> imagePaths =
-        lines.map((id) => 'images/basic/$id.jpg').toList();
-
-    return imagePaths;
   }
 }

@@ -161,13 +161,30 @@ class _ChatPageState extends State<ChatPage> {
         ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
       );
 
-      final List<String> imagePaths = await _aiService.getMemeSuggestions(
-        guide: guide,
-        userInput: userInput,
-        aiMode: currentAIMode,
-        optionNumber: optionNumber,
-        notifier: chatHistoryNotifier,
-      );
+      // 1. Get the list of suggestion objects from the AI service.
+      //    (Variable renamed to 'suggestions' for clarity)
+      final List<MemeSuggestion> suggestions = await _aiService
+          .getMemeSuggestions(
+            guide: guide,
+            userInput: userInput,
+            aiMode: currentAIMode,
+            optionNumber: optionNumber,
+            notifier: chatHistoryNotifier,
+          );
+
+      // 2. Create the list of image path strings using the .map() method.
+      //    This iterates through each 'MemeSuggestion' and pulls out the 'imagePath' property.
+      final List<String> imagePaths =
+          suggestions.map((suggestion) => suggestion.imagePath).toList();
+
+      // 3. (IMPORTANT) You can do the same to get a list of the reasons!
+      //    You will need this list to display the reasons in your UI.
+      final List<String> reasons =
+          suggestions.map((suggestion) => suggestion.reason).toList();
+
+      for (final a in reasons) {
+        print(a);
+      }
 
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
