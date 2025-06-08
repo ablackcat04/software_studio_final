@@ -4,10 +4,8 @@ import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/service/navigation.dart'; // 引入主畫面 (assuming this defines 'router')
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/state/favorite_notifier.dart';
-import 'package:software_studio_final/state/guide_notifier.dart'; // <-- Add this import
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
-// import 'package:firebase_options/firebase_options.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -30,7 +28,7 @@ void main() async {
           value: chatHistoryNotifier,
         ),
         ChangeNotifierProvider(create: (_) => FavoriteNotifier()),
-        ChangeNotifierProvider(create: (_) => GuideNotifier()),
+        // ChangeNotifierProvider(create: (_) => GuideNotifier()),
       ],
       child: const MyApp(),
     ),
