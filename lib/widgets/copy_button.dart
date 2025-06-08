@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:http/http.dart' as http;
+import 'package:software_studio_final/page/trending.dart';
 
 class CopyButton extends StatelessWidget {
   final String imagePath;
@@ -19,6 +20,10 @@ class CopyButton extends StatelessWidget {
   }
 
   void _onCopy(BuildContext context) {
+    FirestoreService().addOrIncrementMeme(
+      memeId: imagePath.split('/').last.split('.').first,
+      path: imagePath,
+    );
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     if (imagePath.startsWith('http')) {
       http
