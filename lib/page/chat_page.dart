@@ -87,7 +87,7 @@ class _ChatPageState extends State<ChatPage> {
 
       // ADDED: Attempt to rename chat history only if it's the default title
       // and has sufficient messages (at least 2 for a meaningful summary).
-      if (chatHistoryNotifier.currentChatHistory.title == '新聊天' &&
+      if (chatHistoryNotifier.currentChatHistory.title == '新對話' &&
           chatHistoryNotifier.currentChatHistory.messages.length >= 2) {
         _renameHistoryCancellationToken =
             CancellationToken(); // Create a new token for this specific operation
