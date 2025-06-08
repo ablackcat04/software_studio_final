@@ -47,18 +47,23 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return; // Prevent context usage after unmounting
+
       final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
         context,
         listen: false,
       );
+
       if (chatHistoryNotifier.chatHistory.isEmpty) {
         chatHistoryNotifier.newChat();
       }
+
       if (chatHistoryNotifier.currentChatHistory.messages.isEmpty) {
-        setState(() => mstate = MainState.blank);
+        if (mounted) setState(() => mstate = MainState.blank);
       } else {
-        setState(() => mstate = MainState.conversation);
+        if (mounted) setState(() => mstate = MainState.conversation);
       }
+
       chatHistoryNotifier.currentChatHistory.renameHistory();
     });
   }
