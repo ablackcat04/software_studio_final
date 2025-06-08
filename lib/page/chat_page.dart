@@ -142,6 +142,7 @@ class _ChatPageState extends State<ChatPage> {
           imageBytes: imageBytes,
           mimeType: null,
           intension: analysisResult.userIntention,
+          selectedMode: currentAIMode
         );
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: 'AI完成重新生成推薦指南'),
