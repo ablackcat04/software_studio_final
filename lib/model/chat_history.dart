@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:software_studio_final/service/ai_suggestion_service.dart';
@@ -45,6 +46,34 @@ class ChatHistory {
     name = await _aiService.nameHistory(history: toPromptString());
   }
 
+  // In ChatHistory
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'createdAt': createdAt.toIso8601String(),
+    'messages': messages.map((e) => e.toJson()).toList(),
+    'activateFolder': activateFolder,
+    'hasSetup': hasSetup,
+    'imageBytes': imageBytes != null ? base64Encode(imageBytes!) : null,
+    'guide': guide,
+  };
+
+  factory ChatHistory.fromJson(Map<String, dynamic> json) =>
+      ChatHistory(
+          name: json['name'],
+          createdAt: DateTime.parse(json['createdAt']),
+          messages:
+              (json['messages'] as List)
+                  .map((e) => ChatMessage.fromJson(e))
+                  .toList(),
+          hasSetup: json['hasSetup'] ?? false,
+        )
+        ..id = json['id']
+        ..activateFolder = Map<String, bool>.from(json['activateFolder'])
+        ..imageBytes =
+            json['imageBytes'] != null ? base64Decode(json['imageBytes']) : null
+        ..guide = json['guide'];
+
   ChatHistory copyWith({
     String? name,
     DateTime? createdAt,
@@ -79,4 +108,20 @@ class ChatMessage {
       suggestions: suggestions ?? suggestions,
     );
   }
+
+  // In ChatMessage
+  Map<String, dynamic> toJson() => {
+    'isAI': isAI,
+    'content': content,
+    'suggestions': suggestions?.map((e) => e.toJson()).toList(),
+  };
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
+    isAI: json['isAI'],
+    content: json['content'],
+    suggestions:
+        (json['suggestions'] as List?)
+            ?.map((e) => MemeSuggestion.fromJson(e))
+            .toList(),
+  );
 }
