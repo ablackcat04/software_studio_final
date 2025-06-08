@@ -7,7 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/model/chat_history.dart';
-import 'package:software_studio_final/service/ai_suggestion_service.dart'; // IMPORT THE SERVICE
+// MODIFIED: Make sure to import the file containing CancellationToken and CancellationException
+import 'package:software_studio_final/service/ai_suggestion_service.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/state/guide_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
@@ -26,17 +27,30 @@ class _UploadPageState extends State<UploadPage> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
   bool uploaded = false;
-  Uint8List? _uploadedImage; // 新增變數，用於存儲圖片數據
+  Uint8List? _uploadedImage;
 
-  // ADDED: Create an instance of the service
+  // ADDED: State for cancellation
+  CancellationToken? _cancellationToken;
   final AiSuggestionService _aiService = AiSuggestionService();
 
   String get apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
+  // ADDED: Handler to trigger cancellation
+  void _onStopPressed() {
+    if (_cancellationToken != null) {
+      print("Stop generation requested by user on upload page.");
+      _cancellationToken!.cancel();
+    }
+  }
+
   Future<void> _onUpload() async {
     if (_isLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _cancellationToken =
+          CancellationToken(); // Create a token for this operation
+    });
 
     final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
@@ -44,24 +58,37 @@ class _UploadPageState extends State<UploadPage> {
       listen: false,
     );
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    XFile? image;
+    try {
+      image = await picker.pickImage(source: ImageSource.gallery);
+    } catch (e) {
+      print("Image picking cancelled or failed: $e");
+    }
 
     if (apiKey.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('API key not found.')));
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _cancellationToken = null;
+      });
       return;
     }
+    // If user cancels the picker, image will be null
     if (image == null) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _cancellationToken = null;
+      });
       return;
     }
 
-    final imageBytes = await image.readAsBytes(); // 先獲取圖片數據
+    final imageBytes = await image.readAsBytes();
     setState(() {
       uploaded = true;
-      _uploadedImage = imageBytes; // 在 setState 中更新狀態
+      _uploadedImage = imageBytes;
     });
 
     chatHistoryNotifier.addMessage(
@@ -80,6 +107,7 @@ class _UploadPageState extends State<UploadPage> {
         intension:
             "This is the first generation, no intension provided now, do your best!",
         selectedMode: guideNotifier.mode,
+        cancellationToken: _cancellationToken!, // Pass the token
       );
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
@@ -96,6 +124,15 @@ class _UploadPageState extends State<UploadPage> {
           ChatMessage(isAI: true, content: '無法生成建議指南，模型未返回文本。'),
         );
       }
+      // ADDED: Catch cancellation exception
+    } on CancellationException catch (_) {
+      print('Guide generation cancelled.');
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: '指南生成已取消。'),
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Generation stopped.')));
     } catch (e) {
       print('Error generating guide with Gemini: $e');
       final errorMessage = '生成建議指南時發生錯誤：\n${e.toString()}';
@@ -106,7 +143,10 @@ class _UploadPageState extends State<UploadPage> {
         SnackBar(content: Text('Error generating guide: ${e.toString()}')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _cancellationToken = null; // Clean up the token
+      });
     }
   }
 
@@ -133,7 +173,11 @@ class _UploadPageState extends State<UploadPage> {
     _messageController.clear();
     FocusScope.of(context).unfocus();
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _cancellationToken =
+          CancellationToken(); // Create a token for this operation
+    });
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: true, content: '正在尋找最適合的梗圖...'),
     );
@@ -150,6 +194,7 @@ class _UploadPageState extends State<UploadPage> {
             aiMode: currentAIMode,
             optionNumber: optionNumber,
             notifier: chatHistoryNotifier,
+            cancellationToken: _cancellationToken!, // Pass the token
           );
 
       suggestions.map((suggestion) => suggestion.imagePath).toList();
@@ -160,6 +205,15 @@ class _UploadPageState extends State<UploadPage> {
 
       chatHistoryNotifier.currentSetup();
       widget.onNavigate.call(1);
+      // ADDED: Catch cancellation exception
+    } on CancellationException catch (_) {
+      print('Meme suggestion cancelled.');
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: '梗圖建議已取消。'),
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Suggestion stopped.')));
     } catch (e) {
       print('Error getting suggestions from service: $e');
       final errorMessage = '生成建議時發生錯誤：\n${e.toString()}';
@@ -170,7 +224,10 @@ class _UploadPageState extends State<UploadPage> {
         context,
       ).showSnackBar(SnackBar(content: Text('錯誤: ${e.toString()}')));
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _cancellationToken = null; // Clean up the token
+      });
     }
   }
 
@@ -205,7 +262,7 @@ class _UploadPageState extends State<UploadPage> {
               },
             ),
           ),
-          if (_uploadedImage != null) // 显示上传的图片
+          if (_uploadedImage != null)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Image.memory(
@@ -215,32 +272,47 @@ class _UploadPageState extends State<UploadPage> {
                 fit: BoxFit.cover,
               ),
             ),
+          // MODIFIED: Show stop button during initial upload
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: _isLoading
-                ? const CircularProgressIndicator()
-                : !uploaded
+            child:
+                _isLoading && !uploaded
+                    ? Column(
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _onStopPressed,
+                          icon: const Icon(Icons.stop),
+                          label: const Text('停止'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade700,
+                          ),
+                        ),
+                      ],
+                    )
+                    : !uploaded
                     ? Container(
-                        decoration: BoxDecoration(
-                          color: Colors.orangeAccent,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          onPressed: _onUpload,
-                          color: theme.colorScheme.onTertiaryContainer,
-                          icon: const Icon(Icons.add_photo_alternate_outlined),
-                          iconSize: screenWidth * 0.6,
-                          padding: const EdgeInsets.all(12),
-                          tooltip: '上傳對話截圖',
-                        ),
-                      )
+                      decoration: BoxDecoration(
+                        color: Colors.orangeAccent,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        onPressed: _onUpload,
+                        color: theme.colorScheme.onTertiaryContainer,
+                        icon: const Icon(Icons.add_photo_alternate_outlined),
+                        iconSize: screenWidth * 0.6,
+                        padding: const EdgeInsets.all(12),
+                        tooltip: '上傳對話截圖',
+                      ),
+                    )
                     : const SizedBox(),
           ),
           if (!uploaded)
@@ -266,6 +338,8 @@ class _UploadPageState extends State<UploadPage> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      // MODIFIED: Disable text field while loading
+                      enabled: !_isLoading,
                       decoration: InputDecoration(
                         hintText: '輸入訊息已獲得精準的建議...',
                         border: OutlineInputBorder(
@@ -283,12 +357,21 @@ class _UploadPageState extends State<UploadPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _isLoading ? null : _onSendMessage,
-                    icon: const Icon(Icons.send),
-                    color: theme.colorScheme.primary,
-                    disabledColor: theme.colorScheme.onSurface.withOpacity(0.5),
-                  ),
+                  // MODIFIED: Show stop button instead of send button when loading
+                  if (_isLoading)
+                    IconButton(
+                      onPressed: _onStopPressed,
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      color: Colors.red.shade700,
+                      tooltip: '停止',
+                    )
+                  else
+                    IconButton(
+                      onPressed: _onSendMessage,
+                      icon: const Icon(Icons.send),
+                      color: theme.colorScheme.primary,
+                      tooltip: '發送',
+                    ),
                 ],
               ),
             )
@@ -301,6 +384,8 @@ class _UploadPageState extends State<UploadPage> {
 
   @override
   void dispose() {
+    // ADDED: Cancel any ongoing operations when the page is disposed
+    _cancellationToken?.cancel();
     _messageController.dispose();
     super.dispose();
   }
