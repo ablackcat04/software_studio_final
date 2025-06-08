@@ -27,6 +27,7 @@ class _UploadPageState extends State<UploadPage> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
   bool uploaded = false;
+  bool _analysisCompleted = false;
   Uint8List? _uploadedImage;
 
   // ADDED: State for cancellation
@@ -111,6 +112,11 @@ class _UploadPageState extends State<UploadPage> {
       );
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
+        setState(() {
+            _analysisCompleted = true; // 更新分析完成狀態
+        });
+        chatHistoryNotifier.removeMessage('圖片已上傳 ✅，可以趁機打字');
+        chatHistoryNotifier.removeMessage('正在分析圖片並生成建議指南...');
         guideNotifier.setGuide(aiGuideText);
         chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
         chatHistoryNotifier.addMessage(
@@ -240,7 +246,7 @@ class _UploadPageState extends State<UploadPage> {
     final messages = chatHistoryNotifier.currentChatHistory.messages;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('上傳圖片')),
+      appBar: _analysisCompleted ? null : AppBar(title: const Text('上傳圖片')),
       body: Column(
         children: [
           Expanded(

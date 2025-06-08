@@ -215,6 +215,8 @@ class _ChatPageState extends State<ChatPage> {
         _scrollToBottom(); // 滾動到最下面
 
         if (aiGuideText != null && aiGuideText.isNotEmpty) {
+          chatHistoryNotifier.removeMessage('圖片已上傳 ✅，可以趁機打字');
+          chatHistoryNotifier.removeMessage('正在分析圖片並生成建議指南...');
           guideNotifier.setGuide(aiGuideText);
           chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
           chatHistoryNotifier.addMessage(
