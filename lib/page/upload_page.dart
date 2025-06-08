@@ -26,6 +26,7 @@ class _UploadPageState extends State<UploadPage> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
   bool uploaded = false;
+  Uint8List? _uploadedImage; // 新增變數，用於存儲圖片數據
 
   // ADDED: Create an instance of the service
   final AiSuggestionService _aiService = AiSuggestionService();
@@ -57,7 +58,11 @@ class _UploadPageState extends State<UploadPage> {
       return;
     }
 
-    setState(() => uploaded = true);
+    final imageBytes = await image.readAsBytes(); // 先獲取圖片數據
+    setState(() {
+      uploaded = true;
+      _uploadedImage = imageBytes; // 在 setState 中更新狀態
+    });
 
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: false, content: '圖片已上傳 ✅，可以趁機打字'),
@@ -67,8 +72,6 @@ class _UploadPageState extends State<UploadPage> {
     );
 
     try {
-      final Uint8List imageBytes = await image.readAsBytes();
-
       chatHistoryNotifier.currentChatHistory.setImage(imageBytes);
 
       final aiGuideText = await _aiService.generateGuide(
@@ -191,7 +194,7 @@ class _UploadPageState extends State<UploadPage> {
                   title: Text(
                     message.isAI
                         ? 'AI: ${message.content}'
-                        : '使用者: ${message.content}',
+                        : '用戶: ${message.content}',
                     style: TextStyle(
                       fontSize: 14,
                       color: message.isAI ? Colors.grey[800] : Colors.blue[800],
@@ -201,33 +204,42 @@ class _UploadPageState extends State<UploadPage> {
               },
             ),
           ),
+          if (_uploadedImage != null) // 显示上传的图片
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Image.memory(
+                _uploadedImage!,
+                width: screenWidth * 0.8,
+                height: screenHeight * 0.4,
+                fit: BoxFit.cover,
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child:
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : !uploaded
+            child: _isLoading
+                ? const CircularProgressIndicator()
+                : !uploaded
                     ? Container(
-                      decoration: BoxDecoration(
-                        color: Colors.orangeAccent,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        onPressed: _onUpload,
-                        color: theme.colorScheme.onTertiaryContainer,
-                        icon: const Icon(Icons.add_photo_alternate_outlined),
-                        iconSize: screenWidth * 0.6,
-                        padding: const EdgeInsets.all(12),
-                        tooltip: '上傳對話截圖',
-                      ),
-                    )
+                        decoration: BoxDecoration(
+                          color: Colors.orangeAccent,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: _onUpload,
+                          color: theme.colorScheme.onTertiaryContainer,
+                          icon: const Icon(Icons.add_photo_alternate_outlined),
+                          iconSize: screenWidth * 0.6,
+                          padding: const EdgeInsets.all(12),
+                          tooltip: '上傳對話截圖',
+                        ),
+                      )
                     : const SizedBox(),
           ),
           if (!uploaded)
@@ -254,7 +266,7 @@ class _UploadPageState extends State<UploadPage> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: '輸入訊息以獲得更精準的建議...',
+                        hintText: '輸入訊息已獲得精準的建議...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
