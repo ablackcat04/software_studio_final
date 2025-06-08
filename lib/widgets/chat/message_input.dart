@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class MessageInput extends StatelessWidget {
   final TextEditingController textController;
   final VoidCallback onSendPressed;
+  final VoidCallback? onStopPressed; // ADDED: Callback for stopping
+  final bool isLoading;
 
   const MessageInput({
     super.key,
     required this.textController,
     required this.onSendPressed,
+    this.onStopPressed, // ADDED
+    this.isLoading = false,
   });
 
   @override
@@ -21,25 +25,28 @@ class MessageInput extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: textController,
-              decoration: InputDecoration(
-                hintText: "輸入提示...",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest,
+              decoration: const InputDecoration(
+                hintText: 'Describe your meme...',
+                border: OutlineInputBorder(),
               ),
               onSubmitted: (_) => onSendPressed(),
+              enabled: !isLoading, // Disable text field while loading
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.send),
-            color: theme.colorScheme.primary,
-            iconSize: 28,
-            onPressed: onSendPressed,
-          ),
+          // CONDITIONALLY SHOW a stop button or the send button
+          if (isLoading)
+            IconButton(
+              icon: const Icon(Icons.stop_circle_outlined, color: Colors.red),
+              onPressed: onStopPressed,
+              tooltip: 'Stop Generation',
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: onSendPressed,
+              tooltip: 'Send',
+            ),
         ],
       ),
     );
