@@ -24,6 +24,8 @@ class ChatHistory {
 
   String? guide;
 
+  String get title => name;
+
   void setImage(Uint8List _imageBytes) {
     imageBytes = _imageBytes;
   }
@@ -41,9 +43,14 @@ class ChatHistory {
         .join('\n\n');
   }
 
-  Future<void> renameHistory() async {
+  Future<void> renameHistory({
+    required CancellationToken cancellationToken,
+  }) async {
     final AiSuggestionService _aiService = AiSuggestionService();
-    name = await _aiService.nameHistory(history: toPromptString());
+    name = await _aiService.nameHistory(
+      history: toPromptString(),
+      cancellationToken: cancellationToken,
+    );
   }
 
   // In ChatHistory
