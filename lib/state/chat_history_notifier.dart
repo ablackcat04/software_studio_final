@@ -35,6 +35,14 @@ class ChatHistoryNotifier extends ChangeNotifier {
   bool getFolder(String folder) =>
       _currentChatHistory.activateFolder[folder] ?? false;
 
+  String _mode = "一般";
+  String get mode => _mode;
+
+  void setMode(String newMode) {
+    _mode = newMode;
+    notifyListeners();
+  }
+
   ChatHistoryNotifier() {
     // newChat();
     // currentSetup();

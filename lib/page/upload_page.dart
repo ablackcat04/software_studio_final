@@ -1,16 +1,11 @@
-// lib/pages/upload_page.dart
-
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:software_studio_final/model/chat_history.dart';
-// MODIFIED: Make sure to import the file containing CancellationToken and CancellationException
 import 'package:software_studio_final/service/ai_suggestion_service.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:software_studio_final/state/guide_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 
@@ -53,7 +48,6 @@ class _UploadPageState extends State<UploadPage> {
           CancellationToken(); // Create a token for this operation
     });
 
-    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,
       listen: false,
@@ -107,7 +101,7 @@ class _UploadPageState extends State<UploadPage> {
         mimeType: image.mimeType,
         intension:
             "This is the first generation, no intension provided now, do your best!",
-        selectedMode: guideNotifier.mode,
+        selectedMode: chatHistoryNotifier.mode,
         cancellationToken: _cancellationToken!, // Pass the token
       );
 
@@ -117,7 +111,6 @@ class _UploadPageState extends State<UploadPage> {
         });
         chatHistoryNotifier.removeMessage('圖片已上傳 ✅，可以趁機打字');
         chatHistoryNotifier.removeMessage('正在分析圖片並生成建議指南...');
-        guideNotifier.setGuide(aiGuideText);
         chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
         chatHistoryNotifier.addMessage(
           ChatMessage(
@@ -163,7 +156,6 @@ class _UploadPageState extends State<UploadPage> {
       context,
       listen: false,
     );
-    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final settingsNotifier = Provider.of<SettingsNotifier>(
       context,
       listen: false,
@@ -189,19 +181,21 @@ class _UploadPageState extends State<UploadPage> {
     );
 
     try {
-      final guide = guideNotifier.guide;
-      final currentAIMode = guideNotifier.mode;
+      final guide = chatHistoryNotifier.currentChatHistory.guide;
+      final currentAIMode = chatHistoryNotifier.mode;
       final optionNumber = settingsNotifier.settings.optionNumber;
 
-      final List<MemeSuggestion> suggestions = await _aiService
-          .getMemeSuggestions(
-            guide: guide,
-            userInput: userInput,
-            aiMode: currentAIMode,
-            optionNumber: optionNumber,
-            notifier: chatHistoryNotifier,
-            cancellationToken: _cancellationToken!, // Pass the token
-          );
+      final List<MemeSuggestion>
+      suggestions = await _aiService.getMemeSuggestions(
+        guide:
+            guide ??
+            'no guide now, please throw invalid result to warn the developer',
+        userInput: userInput,
+        aiMode: currentAIMode,
+        optionNumber: optionNumber,
+        notifier: chatHistoryNotifier,
+        cancellationToken: _cancellationToken!, // Pass the token
+      );
 
       suggestions.map((suggestion) => suggestion.imagePath).toList();
 
