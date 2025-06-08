@@ -13,7 +13,6 @@ import 'package:software_studio_final/widgets/chat/message_input.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';
 import 'dart:io';
-import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 
 Future<File> getChatHistoryFile() async {
