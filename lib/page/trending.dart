@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// This import is from your original code. Make sure this file exists.
+
+// Your own project imports. Make sure the paths are correct.
 import 'package:software_studio_final/widgets/favorite_button.dart';
 
 // -------------------------------------------------------------------
@@ -30,22 +31,42 @@ class MemeTemplate {
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Fetches memes and sorts them by 'used_times' in descending order
-  Future<List<MemeTemplate>> getTrendingMemes() async {
-    try {
-      QuerySnapshot querySnapshot =
-          await _db
-              .collection('trending')
-              .orderBy('used_times', descending: true)
-              .get();
+  /// Fetches memes and sorts them by 'used_times' in descending order.
+  Stream<List<MemeTemplate>> getTrendingMemesStream() {
+    return _db
+        .collection('trending')
+        .orderBy('used_times', descending: true)
+        .snapshots() // Use snapshots() instead of get()
+        .map((snapshot) {
+          // Map the QuerySnapshot to a List<MemeTemplate>
+          return snapshot.docs
+              .map((doc) => MemeTemplate.fromFirestore(doc))
+              .toList();
+        });
+  }
 
-      return querySnapshot.docs
-          .map((doc) => MemeTemplate.fromFirestore(doc))
-          .toList();
+  Future<void> addOrIncrementMeme({
+    required String memeId,
+    required String path,
+  }) async {
+    final String cleanMemeId = memeId.split('/').last.split('.').first;
+
+    final memeRef = _db
+        .collection('trending')
+        .doc(cleanMemeId); // Use the clean ID
+
+    try {
+      await _db.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(memeRef);
+        if (docSnapshot.exists) {
+          transaction.update(memeRef, {'used_times': FieldValue.increment(1)});
+        } else {
+          // Use the original 'path' for the data, but the 'cleanMemeId' for the document.
+          transaction.set(memeRef, {'path': path, 'used_times': 1});
+        }
+      });
     } catch (e) {
-      // It's good practice to log errors for debugging
-      debugPrint('Error fetching trending memes: $e');
-      return []; // Return an empty list on error to prevent crashing
+      debugPrint('Error in addOrIncrementMeme transaction: $e');
     }
   }
 }
@@ -62,51 +83,44 @@ class TrendingPage extends StatefulWidget {
 
 class _TrendingPageState extends State<TrendingPage> {
   final FirestoreService _firestoreService = FirestoreService();
-  late Future<List<MemeTemplate>> _trendingMemesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start fetching the data as soon as the page is loaded
-    _trendingMemesFuture = _firestoreService.getTrendingMemes();
-  }
+  // We no longer need a late Future variable.
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Trending')),
-      body: FutureBuilder<List<MemeTemplate>>(
-        future: _trendingMemesFuture,
+      // --- REPLACE FutureBuilder WITH StreamBuilder ---
+      body: StreamBuilder<List<MemeTemplate>>(
+        // Listen to the new stream method
+        stream: _firestoreService.getTrendingMemesStream(),
         builder: (context, snapshot) {
-          // --- Handle different states of the Future ---
-
-          // 1. While data is loading, show a spinner
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          // 2. If an error occurred, show an error message
+          // 1. If an error occurred in the stream
           if (snapshot.hasError) {
             return Center(
               child: Text('Something went wrong: ${snapshot.error}'),
             );
           }
 
-          // 3. If data is empty or null, show a message
+          // 2. While waiting for the first data from the stream, show a spinner
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // 3. If the stream is empty or has no data, show a message
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No trending memes found.'));
           }
 
-          // 4. If data is successfully loaded, build the grid
+          // 4. If data is successfully received, build the grid
+          // This builder will now re-run AUTOMATICALLY whenever data changes!
           final memes = snapshot.data!;
           return GridView.builder(
             padding: const EdgeInsets.all(12.0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Two items per row
-              crossAxisSpacing: 12.0, // Horizontal spacing
-              mainAxisSpacing: 12.0, // Vertical spacing
-              childAspectRatio:
-                  0.8, // Adjust ratio for card appearance (width / height)
+              crossAxisCount: 2,
+              crossAxisSpacing: 12.0,
+              mainAxisSpacing: 12.0,
+              childAspectRatio: 0.8,
             ),
             itemCount: memes.length,
             itemBuilder: (context, index) {
@@ -130,19 +144,16 @@ class TrendingMemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior:
-          Clip.antiAlias, // Ensures the image respects the card's rounded corners
+      clipBehavior: Clip.antiAlias,
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Image part of the card
           Expanded(
             child: Image.asset(
               meme.path,
               fit: BoxFit.cover,
-              // Shows an icon if the image asset fails to load
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
                   child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
@@ -150,13 +161,11 @@ class TrendingMemeCard extends StatelessWidget {
               },
             ),
           ),
-          // Bottom info bar of the card
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Usage count display
                 Row(
                   children: [
                     const Icon(
@@ -174,14 +183,9 @@ class TrendingMemeCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Your existing FavoriteButton
                 FavoriteButton(
                   id: meme.id,
-                  // The FavoriteButton needs an identifier for the image.
-                  // We pass the asset path. You may need to adjust this depending
-                  // on how your FavoriteButton is implemented.
                   imageUrl: meme.path,
-                  // We can create a title from the meme data.
                   title: 'Meme #${meme.id}',
                 ),
               ],
