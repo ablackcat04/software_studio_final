@@ -36,6 +36,12 @@ class MemeSuggestion {
     return reason;
   }
 
+  Map<String, dynamic> toJson() => {'imagePath': imagePath, 'reason': reason};
+
+  factory MemeSuggestion.fromJson(Map<String, dynamic> json) {
+    return MemeSuggestion(imagePath: json['imagePath'], reason: json['reason']);
+  }
+
   MemeSuggestion({required this.imagePath, required this.reason});
 
   @override

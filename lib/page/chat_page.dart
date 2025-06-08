@@ -13,6 +13,20 @@ import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 import 'package:software_studio_final/widgets/chat/message_input.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+
+Future<File> getChatHistoryFile() async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/chat_histories.json');
+  } catch (e) {
+    // fallback for development desktop use
+    print("Using fallback path due to path_provider error: $e");
+    return File('chat_histories_fallback.json');
+  }
+}
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
