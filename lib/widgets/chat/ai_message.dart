@@ -81,13 +81,13 @@ class AIMessage extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 CopyButton(imagePath: suggest.imagePath),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 5),
                                 FavoriteButton(
                                   id: suggest.imagePath, // 使用圖片路徑作為唯一的 ID
                                   imageUrl: suggest.imagePath,
                                   title: "Image", // 可以根據需求修改標題
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 5),
                                 ReasonButton(
                                   reason: suggest.reason,
                                   imagePath: suggest.imagePath,

@@ -37,8 +37,8 @@ class FavoritePage extends StatelessWidget {
                         // 圖片部分
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8.0),
-                          child: Image.network(
-                            'assets/' + item.imageUrl,
+                          child: Image.asset(
+                            item.imageUrl,
                             width: MediaQuery.of(context).size.width * 0.6,
                             height: MediaQuery.of(context).size.width * 0.6,
                             fit: BoxFit.cover,
