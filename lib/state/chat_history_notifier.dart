@@ -132,4 +132,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
     _currentChatHistory.activateFolder[folder] = value;
     notifyListeners();
   }
+
+  void removeMessage(String content) {
+  // 從當前聊天歷史中移除指定內容的消息
+  _currentChatHistory.messages.removeWhere((message) => message.content == content);
+  notifyListeners();
+  }
 }
