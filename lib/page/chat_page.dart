@@ -113,11 +113,12 @@ class _ChatPageState extends State<ChatPage> {
       _isLoading = true;
       mstate = MainState.generating;
     });
-    _scrollToBottom();
+    _scrollToBottom(); // 滾動到最下面
+
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: true, content: 'AI正在判斷是否需重新生成推薦指南...'),
     );
-    _scrollToBottom();
+    _scrollToBottom(); // 滾動到最下面
 
     try {
       final guide = guideNotifier.guide;
@@ -132,7 +133,7 @@ class _ChatPageState extends State<ChatPage> {
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: 'AI正在重新生成推薦指南'),
         );
-        _scrollToBottom();
+        _scrollToBottom(); // 滾動到最下面
 
         Uint8List? imageBytes =
             chatHistoryNotifier.currentChatHistory.imageBytes;
@@ -145,7 +146,7 @@ class _ChatPageState extends State<ChatPage> {
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: 'AI完成重新生成推薦指南'),
         );
-        _scrollToBottom();
+        _scrollToBottom(); // 滾動到最下面
 
         if (aiGuideText != null && aiGuideText.isNotEmpty) {
           guideNotifier.setGuide(aiGuideText);
@@ -156,13 +157,13 @@ class _ChatPageState extends State<ChatPage> {
               content: chatHistoryNotifier.currentChatHistory.guide ?? '',
             ),
           );
-          print(aiGuideText);
+          _scrollToBottom(); // 滾動到最下面
         } else {
           chatHistoryNotifier.addMessage(
             ChatMessage(isAI: true, content: 'AI無法生成建議指南，模型未返回文本。'),
           );
+          _scrollToBottom(); // 滾動到最下面
         }
-        _scrollToBottom();
       } else {
         print(
           "AI decided to keep the current guide. User intention: ${analysisResult.userIntention}",
@@ -172,7 +173,7 @@ class _ChatPageState extends State<ChatPage> {
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: 'AI正在尋找最適合的梗圖...'),
       );
-      _scrollToBottom();
+      _scrollToBottom(); // 滾動到最下面
 
       final List<MemeSuggestion> suggestions = await _aiService
           .getMemeSuggestions(
@@ -186,7 +187,7 @@ class _ChatPageState extends State<ChatPage> {
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: "給你的梗圖建議:", suggestions: suggestions),
       );
-      _scrollToBottom();
+      _scrollToBottom(); // 滾動到最下面
     } catch (e) {
       print('Error in _onSendPressed with service: $e');
       final errorMessage = 'AI回覆時發生錯誤：\n${e.toString()}';
@@ -198,6 +199,7 @@ class _ChatPageState extends State<ChatPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('AI回覆錯誤: ${e.toString()}')));
       }
+      _scrollToBottom(); // 滾動到最下面
     } finally {
       if (mounted) {
         setState(() {
@@ -205,7 +207,7 @@ class _ChatPageState extends State<ChatPage> {
           mstate = MainState.conversation;
         });
       }
-      _scrollToBottom();
+      _scrollToBottom(); // 滾動到最下面
     }
   }
 
