@@ -182,7 +182,9 @@ Ensure the generated intentions are distinct within each category and plausible 
     // *** PROMPT MODIFIED HERE ***
     final prompt = """
 You are an intelligent chat history analyzer.
-Your task is to determine if the user's focus or intention in the conversation has shifted enough to require generating a new "Meme Suggestion Guide".
+Your primary task is to analyze the conversation screenshot provided earlier and determine if the user's focus or intention has shifted enough to require generating a new "Meme Suggestion Guide".
+
+**Important**: The conversation screenshot is the primary context for analysis. User input should only be used to refine or clarify the suggestions, not to override the original context.
 
 Analyze the provided chat history.
 
