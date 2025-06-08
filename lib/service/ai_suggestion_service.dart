@@ -4,6 +4,28 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
 
+// lib/service/ai_suggestion_service.dart (or a new file)
+
+// A custom exception to clearly identify cancellation events.
+class CancellationException implements Exception {
+  final String message;
+  CancellationException(this.message);
+
+  @override
+  String toString() => 'CancellationException: $message';
+}
+
+// The token that will be passed around to signal cancellation.
+class CancellationToken {
+  bool _isCancelled = false;
+
+  bool get isCancellationRequested => _isCancelled;
+
+  void cancel() {
+    _isCancelled = true;
+  }
+}
+
 /// A data class to hold the result of the initial history analysis.
 class AnalysisResult {
   /// True if the AI determines a new guide is needed based on the conversation's shift.
@@ -51,6 +73,12 @@ class MemeSuggestion {
 }
 
 class AiSuggestionService {
+  void _throwIfCancelled(CancellationToken token) {
+    if (token.isCancellationRequested) {
+      throw CancellationException('Operation was cancelled by the user.');
+    }
+  }
+
   Future<String> nameHistory({required String history}) async {
     if (_apiKey.isEmpty) {
       throw Exception("Gemini API key not found.");
@@ -215,7 +243,9 @@ $history
 """;
 
     final content = [Content.text(prompt)];
+    _throwIfCancelled(cancellationToken);
     final response = await model.generateContent(content);
+    _throwIfCancelled(cancellationToken);
     final aiResponseText = response.text;
 
     if (aiResponseText == null || aiResponseText.trim().isEmpty) {
@@ -301,6 +331,7 @@ $databaseString
     required String? mimeType,
     required String intension,
     required String selectedMode, // 新增參數
+    required CancellationToken cancellationToken,
   }) async {
     final model = GenerativeModel(
       model: 'gemini-2.5-flash-preview-05-20',
@@ -355,8 +386,9 @@ Ensure the generated intentions are distinct within each category and plausible 
         DataPart(mimeType ?? 'image/jpeg', imageBytes!),
       ]),
     ];
-
+    _throwIfCancelled(cancellationToken);
     final response = await model.generateContent(content);
+    _throwIfCancelled(cancellationToken);
     return response.text;
   }
 
