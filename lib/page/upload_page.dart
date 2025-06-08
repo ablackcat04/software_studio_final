@@ -79,6 +79,7 @@ class _UploadPageState extends State<UploadPage> {
         mimeType: image.mimeType,
         intension:
             "This is the first generation, no intension provided now, do your best!",
+        selectedMode: guideNotifier.mode,
       );
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
