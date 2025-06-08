@@ -338,8 +338,7 @@ class _UploadPageState extends State<UploadPage> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
-                      // MODIFIED: Disable text field while loading
-                      enabled: !_isLoading,
+                      // 移除禁用邏輯，讓輸入框始終可用
                       decoration: InputDecoration(
                         hintText: '輸入訊息已獲得精準的建議...',
                         border: OutlineInputBorder(
@@ -353,11 +352,11 @@ class _UploadPageState extends State<UploadPage> {
                           vertical: 12.0,
                         ),
                       ),
-                      onSubmitted: (_) => _isLoading ? null : _onSendMessage(),
+                      onSubmitted: (_) => _onSendMessage(), // 始終允許提交
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // MODIFIED: Show stop button instead of send button when loading
+                  // 按鈕狀態切換保持不變
                   if (_isLoading)
                     IconButton(
                       onPressed: _onStopPressed,

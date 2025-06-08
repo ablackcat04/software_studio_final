@@ -30,7 +30,7 @@ class MessageInput extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
               onSubmitted: (_) => onSendPressed(),
-              enabled: !isLoading, // Disable text field while loading
+              // 移除 `enabled` 屬性，讓輸入框始終可用
             ),
           ),
           const SizedBox(width: 8),
