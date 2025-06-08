@@ -60,7 +60,7 @@ class _UploadPageState extends State<UploadPage> {
     setState(() => uploaded = true);
 
     chatHistoryNotifier.addMessage(
-      ChatMessage(isAI: false, content: '圖片已上傳 ✅'),
+      ChatMessage(isAI: false, content: '圖片已上傳 ✅，可以趁機打字'),
     );
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: true, content: '正在分析圖片並生成建議指南...'),

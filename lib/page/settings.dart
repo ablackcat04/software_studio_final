@@ -25,27 +25,6 @@ class SettingsPage extends StatelessWidget {
         body: ListView(
           children: [
             ListTile(
-              title: Text('My Favorite'),
-              trailing: Switch(
-                value: settings.myFavorite,
-                onChanged: (bool value) {},
-              ),
-            ),
-            ListTile(
-              title: Text('Hidden Pictures'),
-              trailing: Switch(
-                value: settings.hiddenPictures,
-                onChanged: (bool value) {},
-              ),
-            ),
-            ListTile(
-              title: Text('Privacy Mode'),
-              trailing: Switch(
-                value: settings.privacyPolicy,
-                onChanged: (bool value) {},
-              ),
-            ),
-            ListTile(
               title: Text('Dark Theme'),
               trailing: Switch(
                 value: settings.isDarkTheme,
