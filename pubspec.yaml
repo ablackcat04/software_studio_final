@@ -78,6 +78,7 @@ flutter:
     - assets/images/image5.jpg
     - .env
     - assets/images/basic/description/mygo.json
+    - assets/images/basic/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

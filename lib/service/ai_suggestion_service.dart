@@ -374,8 +374,7 @@ $databaseString
                   final id = item['id'] as String;
                   final reason = item['reason'] as String;
                   return MemeSuggestion(
-                    imagePath:
-                        'images/basic/$id.jpg', // Convert ID to full path
+                    imagePath: 'assets/images/basic/$id.jpg',
                     reason: reason,
                   );
                 } else {
