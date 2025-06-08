@@ -1,18 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:software_studio_final/model/chat_history.dart';
-import 'package:software_studio_final/page/chat_page.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<void> saveChatHistories(List<ChatHistory> histories) async {
   try {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/chat_histories.json');
+    if (kIsWeb) {
+      print("Running on web");
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/chat_histories.json');
 
-    final jsonList = histories.map((history) => history.toJson()).toList();
-    await file.writeAsString(jsonEncode(jsonList));
+      final jsonList = histories.map((history) => history.toJson()).toList();
+      await file.writeAsString(jsonEncode(jsonList));
+    }
   } catch (e) {
     print('Failed to save chat histories: $e');
   }
@@ -37,12 +40,28 @@ class ChatHistoryNotifier extends ChangeNotifier {
     // currentSetup();
   }
 
+  Future<File> getChatHistoryFile() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      return File('${dir.path}/chat_histories.json');
+    } catch (e) {
+      // fallback for development desktop use
+      print("Using fallback path due to path_provider error: $e");
+      return File('chat_histories_fallback.json');
+    }
+  }
+
   Future<List<ChatHistory>> loadChatHistories() async {
-    final file = await getChatHistoryFile();
-    if (!await file.exists()) return [];
-    final content = await file.readAsString();
-    final jsonList = jsonDecode(content);
-    return (jsonList as List).map((e) => ChatHistory.fromJson(e)).toList();
+    if (kIsWeb) {
+      print("Running on web");
+      return [];
+    } else {
+      final file = await getChatHistoryFile();
+      if (!await file.exists()) return [];
+      final content = await file.readAsString();
+      final jsonList = jsonDecode(content);
+      return (jsonList as List).map((e) => ChatHistory.fromJson(e)).toList();
+    }
   }
 
   Future<void> load() async {

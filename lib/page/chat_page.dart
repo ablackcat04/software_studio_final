@@ -13,20 +13,6 @@ import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
 import 'package:software_studio_final/widgets/chat/message_input.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
-
-Future<File> getChatHistoryFile() async {
-  try {
-    final dir = await getApplicationDocumentsDirectory();
-    return File('${dir.path}/chat_histories.json');
-  } catch (e) {
-    // fallback for development desktop use
-    print("Using fallback path due to path_provider error: $e");
-    return File('chat_histories_fallback.json');
-  }
-}
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -49,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
   final _pageController = PageController(initialPage: 0);
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final Set<String> _likedImages = {};
+  // 。final Set<String> _likedImages = {};
 
   // ADDED: Create an instance of the service
   final AiSuggestionService _aiService = AiSuggestionService();
@@ -156,7 +142,7 @@ class _ChatPageState extends State<ChatPage> {
           imageBytes: imageBytes,
           mimeType: null,
           intension: analysisResult.userIntention,
-          selectedMode: currentAIMode
+          selectedMode: currentAIMode,
         );
         chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: 'AI完成重新生成推薦指南'),
