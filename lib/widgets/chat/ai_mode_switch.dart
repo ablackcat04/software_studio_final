@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:software_studio_final/state/guide_notifier.dart';
+import 'package:software_studio_final/state/chat_history_notifier.dart';
 
 class AIModeSwitch extends StatefulWidget {
   const AIModeSwitch({super.key});
@@ -23,7 +23,10 @@ class _AIModeSwitchState extends State<AIModeSwitch> {
         _isSelected[i] = i == index;
       }
     });
-    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
+    final guideNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
     if (index == 0) {
       guideNotifier.setMode('一般');
     } else if (index == 1) {
@@ -42,7 +45,10 @@ class _AIModeSwitchState extends State<AIModeSwitch> {
       fontSize: 16,
     );
 
-    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
+    final guideNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
     if (guideNotifier.mode == '一般') {
       _isSelected = [true, false, false, false];
     } else if (guideNotifier.mode == '已讀亂回 (回一些好像有關係但有好像沒關係的，莫名其妙的)') {

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:software_studio_final/model/chat_history.dart';
 import 'package:software_studio_final/service/ai_suggestion_service.dart'; // IMPORT THE SERVICE
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:software_studio_final/state/guide_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/chat/ai_message.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
@@ -156,7 +155,6 @@ class _ChatPageState extends State<ChatPage> {
       context,
       listen: false,
     );
-    final guideNotifier = Provider.of<GuideNotifier>(context, listen: false);
     final settingsNotifier = Provider.of<SettingsNotifier>(
       context,
       listen: false,
@@ -184,8 +182,8 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom(); // 滾動到最下面
 
     try {
-      final guide = guideNotifier.guide;
-      final currentAIMode = guideNotifier.mode;
+      final guide = chatHistoryNotifier.currentChatHistory.guide;
+      final currentAIMode = chatHistoryNotifier.mode;
       final optionNumber = settingsNotifier.getoptionnumbers();
 
       final analysisResult = await _aiService.decideOnGuideRegeneration(
@@ -217,7 +215,6 @@ class _ChatPageState extends State<ChatPage> {
         if (aiGuideText != null && aiGuideText.isNotEmpty) {
           chatHistoryNotifier.removeMessage('圖片已上傳 ✅，可以趁機打字');
           chatHistoryNotifier.removeMessage('正在分析圖片並生成建議指南...');
-          guideNotifier.setGuide(aiGuideText);
           chatHistoryNotifier.currentChatHistory.setGuide(aiGuideText);
           chatHistoryNotifier.addMessage(
             ChatMessage(
@@ -243,15 +240,17 @@ class _ChatPageState extends State<ChatPage> {
       );
       _scrollToBottom(); // 滾動到最下面
 
-      final List<MemeSuggestion> suggestions = await _aiService
-          .getMemeSuggestions(
-            guide: guide,
-            userInput: userInput,
-            aiMode: currentAIMode,
-            optionNumber: optionNumber,
-            notifier: chatHistoryNotifier,
-            cancellationToken: _cancellationToken!, // Pass the token
-          );
+      final List<MemeSuggestion>
+      suggestions = await _aiService.getMemeSuggestions(
+        guide:
+            guide ??
+            'no guide now, please throw invalid result to warn the developer',
+        userInput: userInput,
+        aiMode: currentAIMode,
+        optionNumber: optionNumber,
+        notifier: chatHistoryNotifier,
+        cancellationToken: _cancellationToken!, // Pass the token
+      );
 
       chatHistoryNotifier.addMessage(
         ChatMessage(isAI: true, content: "給你的梗圖建議:", suggestions: suggestions),
