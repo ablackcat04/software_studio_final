@@ -6,27 +6,26 @@ import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/state/favorite_notifier.dart';
 import 'package:software_studio_final/state/guide_notifier.dart'; // <-- Add this import
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-// 引入主畫面
-//import 'mygo_folder.dart'; // 引入 MyGO 資料夾頁面
-//import 'your_pictures_folder.dart'; // 引入 Your Pictures 資料夾頁面
 
 void main() async {
+  await dotenv.load(fileName: ".env");
+
+  final chatHistoryNotifier = ChatHistoryNotifier();
+  await chatHistoryNotifier.load();
+
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<SettingsNotifier>(
-          create: (context) => SettingsNotifier(),
+          create: (_) => SettingsNotifier(),
         ),
-        ChangeNotifierProvider<ChatHistoryNotifier>(
-          create: (context) => ChatHistoryNotifier(),
+        ChangeNotifierProvider<ChatHistoryNotifier>.value(
+          value: chatHistoryNotifier,
         ),
-        ChangeNotifierProvider(create: (_) => FavoriteNotifier()), // 新增收藏功能
-        ChangeNotifierProvider<GuideNotifier>(
-          create: (context) => GuideNotifier(),
-        ),
+        ChangeNotifierProvider(create: (_) => FavoriteNotifier()),
+        ChangeNotifierProvider(create: (_) => GuideNotifier()),
       ],
       child: const MyApp(),
     ),

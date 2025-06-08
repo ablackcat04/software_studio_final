@@ -1,5 +1,22 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:software_studio_final/model/chat_history.dart';
+import 'package:software_studio_final/page/chat_page.dart';
+import 'package:path_provider/path_provider.dart';
+
+Future<void> saveChatHistories(List<ChatHistory> histories) async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/chat_histories.json');
+
+    final jsonList = histories.map((history) => history.toJson()).toList();
+    await file.writeAsString(jsonEncode(jsonList));
+  } catch (e) {
+    print('Failed to save chat histories: $e');
+  }
+}
 
 class ChatHistoryNotifier extends ChangeNotifier {
   final List<ChatHistory> _chatHistory = [];
@@ -16,8 +33,27 @@ class ChatHistoryNotifier extends ChangeNotifier {
       _currentChatHistory.activateFolder[folder] ?? false;
 
   ChatHistoryNotifier() {
-    newChat();
-    currentSetup();
+    // newChat();
+    // currentSetup();
+  }
+
+  Future<List<ChatHistory>> loadChatHistories() async {
+    final file = await getChatHistoryFile();
+    if (!await file.exists()) return [];
+    final content = await file.readAsString();
+    final jsonList = jsonDecode(content);
+    return (jsonList as List).map((e) => ChatHistory.fromJson(e)).toList();
+  }
+
+  Future<void> load() async {
+    final loadedHistories =
+        await loadChatHistories(); // Your disk load function
+    _chatHistory.clear();
+    _chatHistory.addAll(loadedHistories);
+    if (_chatHistory.isNotEmpty) {
+      _currentChatHistory = _chatHistory.first;
+    }
+    notifyListeners();
   }
 
   void newChat() {
@@ -26,6 +62,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       createdAt: DateTime.now(),
       messages: [],
     );
+    saveChatHistories(_chatHistory);
     notifyListeners();
   }
 
@@ -37,6 +74,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
   void addMessage(ChatMessage message) {
     _currentChatHistory.messages.add(message);
+    saveChatHistories(_chatHistory);
     notifyListeners();
   }
 
