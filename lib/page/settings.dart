@@ -55,7 +55,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
-            // 添加 Hidden Pictures 按鈕
+            /* 添加 Hidden Pictures 按鈕
             ListTile(
               title: Text('Hidden Pictures'),
               trailing: Switch(
@@ -64,7 +64,7 @@ class SettingsPage extends StatelessWidget {
                   settingsNotifier.setHiddenPictures(value);
                 },
               ),
-            ),
+            ),*/
           ],
         ),
       ),
