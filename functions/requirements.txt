@@ -1,0 +1,6 @@
+# requirements.txt
+firebase-admin
+numpy
+openai
+firebase_functions~=0.1.0
+python-dotenv

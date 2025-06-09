@@ -1,10 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show Uint8List, rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
+import 'package:http/http.dart' as http; // Add this import at the top
+
+/// Represents a single meme retrieved from the RAG (semantic search) step.
+class _FilteredMemeResult {
+  final String id;
+  final String description;
+
+  _FilteredMemeResult({required this.id, required this.description});
+
+  factory _FilteredMemeResult.fromJson(Map<String, dynamic> json) {
+    return _FilteredMemeResult(
+      id: json['id'] as String,
+      description: json['description'] as String,
+    );
+  }
+}
 
 // A custom exception to clearly identify cancellation events.
 class CancellationException implements Exception {
@@ -81,6 +96,7 @@ class MemeSuggestion {
 
 class AiSuggestionService {
   final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+  final String _ragFunctionUrl = dotenv.env['RAG_FUNCTION_URL'] ?? '';
 
   /// A reusable helper that converts a Gemini stream into a cancellable Future.
   /// It handles stream listening, cancellation, and parsing.
@@ -294,7 +310,66 @@ Ensure the generated intentions are distinct within each category and plausible 
     );
   }
 
-  /// Gets meme suggestions based on context using a cancellable stream.
+  Future<List<_FilteredMemeResult>> _findRelevantMemesViaRAG({
+    required String query,
+    required CancellationToken cancellationToken,
+    required int amount,
+  }) async {
+    if (_ragFunctionUrl.isEmpty) {
+      throw Exception("RAG_FUNCTION_URL not found in .env file.");
+    }
+
+    // Use a Completer to make the http call cancellable.
+    final completer = Completer<List<_FilteredMemeResult>>();
+    final client = http.Client();
+
+    cancellationToken.onCancel(() {
+      client.close(); // This will cancel the ongoing HTTP request.
+      if (!completer.isCompleted) {
+        completer.completeError(
+          CancellationException("RAG search was cancelled."),
+        );
+      }
+    });
+
+    try {
+      final response = await client.post(
+        Uri.parse(_ragFunctionUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'query': query,
+          'top_k': amount, // Retrieve the top 15 semantically similar memes
+        }),
+      );
+
+      if (cancellationToken.isCancellationRequested) {
+        return completer
+            .future; // The completer will throw a CancellationException.
+      }
+
+      if (response.statusCode == 200) {
+        final List<dynamic> resultsJson = json.decode(response.body);
+        final results =
+            resultsJson
+                .map((json) => _FilteredMemeResult.fromJson(json))
+                .toList();
+        completer.complete(results);
+      } else {
+        throw Exception(
+          'RAG search failed with status ${response.statusCode}: ${response.body}',
+        );
+      }
+    } catch (e) {
+      if (!completer.isCompleted) {
+        completer.completeError(e);
+      }
+    } finally {
+      client.close();
+    }
+
+    return completer.future;
+  }
+
   Future<List<MemeSuggestion>> getMemeSuggestions({
     required String guide,
     required String userInput,
@@ -307,14 +382,47 @@ Ensure the generated intentions are distinct within each category and plausible 
       throw Exception("AI Guide is empty. Cannot get suggestions.");
     }
 
-    final systemPrompt = await _buildSystemPrompt(aiMode, optionNumber);
+    // ===== STEP 1: RETRIEVE (RAG) =====
+    // Create a rich query for the semantic search.
+    final ragQuery =
+        "Based on this context: $guide\nThe user's immediate request is: $userInput";
+
+    // Call the Cloud Function to get the top 25 most relevant memes.
+    final List<_FilteredMemeResult> relevantMemes =
+        await _findRelevantMemesViaRAG(
+          query: ragQuery,
+          cancellationToken: cancellationToken,
+          amount: optionNumber * 4,
+        );
+
+    if (relevantMemes.isEmpty) {
+      throw Exception(
+        "Semantic search (RAG) did not find any relevant memes. Try rephrasing your request.",
+      );
+    }
+
+    // ===== STEP 2 & 3: AUGMENT & GENERATE =====
+    // Build a focused system prompt with ONLY the relevant memes.
+    final systemPrompt = await _buildSystemPrompt(
+      mode: aiMode,
+      optionNumber: optionNumber,
+      relevantMemes: relevantMemes, // Pass the filtered list
+    );
+
+    print(systemPrompt);
+    for (final a in relevantMemes) {
+      print(a.id.toString() + a.description);
+    }
+
     final history = notifier.currentChatHistory.toPromptString();
     final userRequestPrompt =
-        "This is the guide, $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'. Provide $optionNumber meme suggestions based on this.\nThis is the current dialogue history: $history";
+        "This is the guide: $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'.\nFrom the provided database of relevant memes, select the best $optionNumber options.\nThis is the current dialogue history: $history";
+
     final content = [
       Content.multi([TextPart(systemPrompt), TextPart(userRequestPrompt)]),
     ];
 
+    // The rest of the function remains the same, but now it operates on a much smaller, more relevant context.
     return _generateFromStream<List<MemeSuggestion>>(
       content: content,
       cancellationToken: cancellationToken,
@@ -335,6 +443,7 @@ Ensure the generated intentions are distinct within each category and plausible 
                       item.containsKey('id') &&
                       item.containsKey('reason')) {
                     return MemeSuggestion(
+                      // We construct the local path here using the ID from the response.
                       imagePath: 'assets/images/basic/${item['id']}.jpg',
                       reason: item['reason'],
                     );
@@ -354,30 +463,30 @@ Ensure the generated intentions are distinct within each category and plausible 
     );
   }
 
-  // --- Private helper methods (unchanged) ---
+  Future<String> _buildSystemPrompt({
+    required String mode,
+    required int optionNumber,
+    required List<_FilteredMemeResult>
+    relevantMemes, // It now accepts the filtered list
+  }) async {
+    // Convert the list of relevant memes into a string for the prompt.
+    String databaseString = relevantMemes
+        .map((meme) {
+          // Use a consistent format that the LLM can easily parse.
+          return "${meme.id}: ${jsonEncode({'description': meme.description})}";
+        })
+        .join("\n\n");
 
-  Future<Map<String, dynamic>> _loadMemeDatabase() async {
-    String jsonString = await rootBundle.loadString(
-      'assets/images/basic/description/mygo.json',
-    );
-    return jsonDecode(jsonString);
-  }
-
-  Future<String> _buildSystemPrompt(String mode, int optionNumber) async {
-    final memeDatabase = await _loadMemeDatabase();
-    String databaseString = '';
-    for (var entry in memeDatabase.entries) {
-      databaseString += "${entry.key}: ${entry.value.toString()}\n\n";
-    }
+    // The prompt is now much shorter and more focused.
     return """
 Your Role:
-You are a specialized analysis component within an AI Meme Suggestion App's processing pipeline. Your task is to analyze the user's request and the provided guide to select the most suitable memes from a database. The database format is ID: description.
+You are a specialized analysis component within an AI Meme Suggestion App. Your task is to analyze the user's request and the provided guide to select the most suitable memes from a pre-filtered, highly relevant database.
 The current suggestion mode is '$mode'.
 **CRITICAL: Your Output Format**
 You MUST respond with a valid JSON array only. Do not include any text, notes, or markdown formatting before or after the JSON block.
 The array should contain exactly $optionNumber objects.
-Each object in the array represents a single meme suggestion and MUST have two keys:
-1.  `"id"`: A string containing the exact ID of the meme from the database.
+Each object represents a single meme suggestion and MUST have two keys:
+1.  `"id"`: A string containing the exact ID of the meme from the provided database.
 2.  `"reason"`: A concise, user-facing string (in Traditional Chinese) explaining WHY this meme is a good suggestion for the current context.
 **Example of a valid response for 2 options:**
 ```json
@@ -391,8 +500,8 @@ Each object in the array represents a single meme suggestion and MUST have two k
     "reason": "可以用這張迷因來輕鬆地表示同意，緩和氣氛。"
   }
 ]
-You should think through your choices to ensure high quality. Your reasoning will be shown directly to the user, so make it clear, helpful, and concise.
-Meme Database:
+You must think through your choices to ensure high quality. Your reasoning will be shown directly to the user, so make it clear, helpful, and concise.
+**Relevant Meme Database (pre-filtered by semantic search):**
 $databaseString
 """;
   }
