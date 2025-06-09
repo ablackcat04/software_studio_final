@@ -24,7 +24,7 @@ Future<void> saveChatHistories(List<ChatHistory> histories) async {
 class ChatHistoryNotifier extends ChangeNotifier {
   final List<ChatHistory> _chatHistory = [];
   ChatHistory _currentChatHistory = ChatHistory(
-    name: 'Test',
+    name: '新對話',
     createdAt: DateTime.now(),
     messages: [],
   );
@@ -142,8 +142,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   void removeMessage(String content) {
-  // 從當前聊天歷史中移除指定內容的消息
-  _currentChatHistory.messages.removeWhere((message) => message.content == content);
-  notifyListeners();
+    // 從當前聊天歷史中移除指定內容的消息
+    _currentChatHistory.messages.removeWhere(
+      (message) => message.content == content,
+    );
+    notifyListeners();
   }
 }
