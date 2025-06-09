@@ -480,7 +480,7 @@ Ensure the generated intentions are distinct within each category and plausible 
     // The prompt is now much shorter and more focused.
     return """
 Your Role:
-You are a specialized analysis component within an AI Meme Suggestion App. Your task is to analyze the user's request and the provided guide to select the most suitable memes from a pre-filtered, highly relevant database.
+You are a specialized analysis component within an AI Meme Suggestion App. Your task is to analyze the user's request and the provided guide(mainly on the provided guide,because you are still analything the conversation scrrenshot) to select the most suitable memes from a pre-filtered, highly relevant database.
 The current suggestion mode is '$mode'.
 **CRITICAL: Your Output Format**
 You MUST respond with a valid JSON array only. Do not include any text, notes, or markdown formatting before or after the JSON block.
