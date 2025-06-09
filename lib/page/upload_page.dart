@@ -107,7 +107,7 @@ class _UploadPageState extends State<UploadPage> {
 
       if (aiGuideText != null && aiGuideText.isNotEmpty) {
         setState(() {
-            _analysisCompleted = true; // 更新分析完成狀態
+          _analysisCompleted = true; // 更新分析完成狀態
         });
         chatHistoryNotifier.removeMessage('圖片已上傳 ✅，可以趁機打字');
         chatHistoryNotifier.removeMessage('正在分析圖片並生成建議指南...');
@@ -340,7 +340,7 @@ class _UploadPageState extends State<UploadPage> {
                       controller: _messageController,
                       // 移除禁用邏輯，讓輸入框始終可用
                       decoration: InputDecoration(
-                        hintText: '輸入訊息已獲得精準的建議...',
+                        hintText: '輸入提示以獲得更精準的建議...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
