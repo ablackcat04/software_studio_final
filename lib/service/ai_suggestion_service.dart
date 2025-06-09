@@ -269,39 +269,28 @@ $history
   }) async {
     final imageAnalysisPrompt = """
 Your Role:
-You are a specialized analysis component within an AI Meme Suggestion App's processing pipeline. Your primary function is to analyze a user-provided screenshot of a conversation and extract key contextual information. Your output will be a structured "Guide" used by a downstream Large Language Model (LLM) to select relevant memes.
-Input:
-You will receive a screenshot image of a conversation.
-Your Tasks:
-Analyze the Screenshot: Carefully examine both the visual elements and the text content of the screenshot.
-Identify Platform: Determine the platform where the conversation is taking place (e.g., Discord, Facebook Messenger, LINE, Instagram DM, WhatsApp, Twitter/X, PTT, Dcard, 巴哈姆特動畫瘋, a generic web forum, SMS, etc.). If uncertain, state the most likely options.
-Identify User: Infer who the 'user' is (the person who captured the screenshot and intends to reply). Look for indicators like "Me," message alignment (left/right), profile picture conventions, or other UI cues. If ambiguous, describe the participants neutrally (e.g., "User is Person A on the left").
-Summarize Conversation Content: Briefly summarize the topic and tone of the recent conversation exchange shown in the screenshot. Focus on the last few messages to capture the immediate context for the user's potential reply. Note any strong emotions or key points being made.
-Infer User Intentions (Categorized): Based specifically on the current state of the conversation in the screenshot, infer why the user might want to send a meme right now. Generate four distinct potential intentions for the selected reply mode: '$selectedMode'. These intentions should reflect plausible reasons for using a meme in that specific context and mode.
+You are a specialized analysis component within an AI Meme Suggestion App's processing pipeline. Your primary function is to infer potential user intentions based on the provided screenshot and selected mode.
+
+Infer User Intentions (Categorized):
+Based specifically on the current state of the conversation in the screenshot, infer why the user might want to send a meme right now. Generate four distinct potential intentions for the selected reply mode: '$selectedMode'. These intentions should reflect plausible reasons for using a meme in that specific context and mode.
+
 Output Format:
-Structure your findings as a "Mindful Guide" using clear Markdown formatting. This guide will directly inform the next LLM.
-Guide for Meme Suggestion LLM
-1. Conversation Context Summary
-Topic: [Brief summary of what's being discussed]
-Recent Exchange: [Summary of the last 1-3 messages]
-Tone/Emotion: [e.g., Casual, Humorous, Tense, Excited, Neutral, Argumentative]
-2. Potential User Intentions (Why send a meme now?)
-Mode: $selectedMode
+[List of four distinct intentions]
 [Intention 1 - e.g., Express agreement with the last message]
 [Intention 2 - e.g., Show amusement at the situation]
 [Intention 3 - e.g., Lighten the mood]
 [Intention 4 - e.g., Casually acknowledge the message]
+
 Important Considerations:
 Be concise but informative.
 Focus on the immediate context provided in the screenshot.
 If information is ambiguous, acknowledge it.
 Ensure the generated intentions are distinct within each category and plausible given the conversation summary.
 """;
+
     final content = [
       Content.multi([
-        TextPart(
-          '$imageAnalysisPrompt\n\nHere is some conclusion of the user\'s intention: \n$intension',
-        ),
+        TextPart('$imageAnalysisPrompt\n\nHere is some conclusion of the user\'s intention: \n$intension'),
         DataPart(mimeType ?? 'image/jpeg', imageBytes!),
       ]),
     ];
