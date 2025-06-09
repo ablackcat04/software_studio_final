@@ -53,3 +53,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 lib/firebase_options.dart
+backend/ai-meme-suggestion-firebase-adminsdk-fbsvc-1e5209bdbb.json

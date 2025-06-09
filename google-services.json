@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "831707627053",
+    "project_id": "ai-meme-suggestion",
+    "storage_bucket": "ai-meme-suggestion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831707627053:android:a7e362e5ee78e6881642a4",
+        "android_client_info": {
+          "package_name": "com.example.software_studio_final"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0q0fyDfN9LMl9xp4AystIJWPxA7pjpFs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

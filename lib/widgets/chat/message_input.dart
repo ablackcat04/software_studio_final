@@ -26,7 +26,7 @@ class MessageInput extends StatelessWidget {
             child: TextField(
               controller: textController,
               decoration: const InputDecoration(
-                hintText: 'Describe your meme...',
+                hintText: '輸入提示以獲得更精準的建議',
                 border: OutlineInputBorder(),
               ),
               onSubmitted: (_) => onSendPressed(),
