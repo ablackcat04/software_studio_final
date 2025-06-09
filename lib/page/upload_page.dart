@@ -184,17 +184,16 @@ class _UploadPageState extends State<UploadPage> {
       final guide = chatHistoryNotifier.currentChatHistory.guide;
       final currentAIMode = chatHistoryNotifier.mode;
       final optionNumber = settingsNotifier.settings.optionNumber;
+      final hiddenPictures = settingsNotifier.settings.hiddenPictures;
 
-      final List<MemeSuggestion>
-      suggestions = await _aiService.getMemeSuggestions(
-        guide:
-            guide ??
-            'no guide now, please throw invalid result to warn the developer',
+      final List<MemeSuggestion> suggestions = await _aiService.getMemeSuggestions(
+        guide: guide ?? 'no guide now, please throw invalid result to warn the developer',
         userInput: userInput,
         aiMode: currentAIMode,
         optionNumber: optionNumber,
         notifier: chatHistoryNotifier,
-        cancellationToken: _cancellationToken!, // Pass the token
+        cancellationToken: _cancellationToken!,
+        hiddenPictures: hiddenPictures, // 传递 hiddenPictures 状态
       );
 
       suggestions.map((suggestion) => suggestion.imagePath).toList();

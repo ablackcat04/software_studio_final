@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:software_studio_final/model/chat_history.dart';
 import 'package:path_provider/path_provider.dart';
+import 'favorite_notifier.dart';
 
 Future<void> saveChatHistories(List<ChatHistory> histories) async {
   try {
@@ -22,6 +23,8 @@ Future<void> saveChatHistories(List<ChatHistory> histories) async {
 }
 
 class ChatHistoryNotifier extends ChangeNotifier {
+  final FavoriteNotifier favoriteNotifier = FavoriteNotifier(); // 添加 FavoriteNotifier 实例
+
   final List<ChatHistory> _chatHistory = [];
   ChatHistory _currentChatHistory = ChatHistory(
     name: 'Test',

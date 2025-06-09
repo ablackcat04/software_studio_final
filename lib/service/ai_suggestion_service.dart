@@ -77,6 +77,36 @@ class MemeSuggestion {
   String toString() {
     return 'MemeSuggestion(imagePath: $imagePath, reason: $reason)';
   }
+
+  static List<MemeSuggestion> parseSuggestions(String fullText) {
+    final jsonRegex = RegExp(r'\[\s*\{.*?\}\s*\]', dotAll: true); // 更严格的匹配 JSON 数组
+    final match = jsonRegex.firstMatch(fullText);
+    if (match == null) {
+      throw FormatException("No valid JSON array found in AI response. Response: $fullText");
+    }
+    final jsonString = match.group(0)!;
+    final List<dynamic> parsedJson = jsonDecode(jsonString);
+    final List<MemeSuggestion> suggestions =
+        parsedJson
+            .map((item) {
+              if (item is Map<String, dynamic> &&
+                  item.containsKey('id') &&
+                  item.containsKey('reason')) {
+                return MemeSuggestion(
+                  imagePath: 'assets/images/basic/${item['id']}.jpg',
+                  reason: item['reason'],
+                );
+              }
+              return null;
+            })
+            .whereType<MemeSuggestion>()
+            .toList();
+
+    if (suggestions.isEmpty) {
+      throw Exception("Parsed suggestions list is empty, despite receiving a response.");
+    }
+    return suggestions;
+  }
 }
 
 class AiSuggestionService {
@@ -114,28 +144,19 @@ class AiSuggestionService {
         .generateContentStream(content)
         .listen(
           (response) {
-            // Append each chunk of text to our buffer.
             buffer.write(response.text);
           },
           onDone: () {
-            if (!completer.isCompleted) {
-              try {
-                final fullText = buffer.toString();
-                if (fullText.isEmpty) {
-                  throw Exception("AI did not return any content.");
-                }
-                // Once the stream is finished, parse the full text.
-                final result = parser(fullText);
-                completer.complete(result);
-              } catch (e) {
-                completer.completeError(e);
-              }
+            final fullText = buffer.toString();
+            print("AI Response: $fullText"); // 打印完整的 AI 响应
+            if (fullText.isEmpty) {
+              throw Exception("AI did not return any content.");
             }
+            final result = parser(fullText);
+            completer.complete(result);
           },
           onError: (error) {
-            if (!completer.isCompleted) {
-              completer.completeError(error);
-            }
+            completer.completeError(error);
           },
           cancelOnError: true,
         );
@@ -302,55 +323,49 @@ Ensure the generated intentions are distinct within each category and plausible 
     required int optionNumber,
     required ChatHistoryNotifier notifier,
     required CancellationToken cancellationToken,
+    required bool hiddenPictures,
   }) async {
-    if (guide.isEmpty) {
-      throw Exception("AI Guide is empty. Cannot get suggestions.");
-    }
+    // 如果 hiddenPictures 为 true，则只使用 favorite 中的图片
+    final List<String> imagePaths = hiddenPictures
+        ? notifier.favoriteNotifier.favorites.map((item) => item.imageUrl).toList()
+        : notifier.currentChatHistory.imagePaths; // 使用 imagePaths getter
 
-    final systemPrompt = await _buildSystemPrompt(aiMode, optionNumber);
-    final history = notifier.currentChatHistory.toPromptString();
-    final userRequestPrompt =
-        "This is the guide, $guide\nThe user typed: \"$userInput\". Current AI Mode: '$aiMode'. Provide $optionNumber meme suggestions based on this.\nThis is the current dialogue history: $history";
-    final content = [
-      Content.multi([TextPart(systemPrompt), TextPart(userRequestPrompt)]),
-    ];
+    final prompt = """
+Your Role:
+You are an AI meme suggestion engine. Based on the provided guide and user input, generate meme suggestions.
+Guide: $guide
+User Input: $userInput
+AI Mode: $aiMode
+Option Number: $optionNumber
+Image Paths: ${imagePaths.join(', ')}
+
+**CRITICAL: Your Output Format**
+You MUST respond with a valid JSON array only. Do not include any text, notes, or markdown formatting before or after the JSON block.
+The array should contain exactly $optionNumber objects.
+Each object in the array represents a single meme suggestion and MUST have two keys:
+1.  `"id"`: A string containing the exact ID of the meme from the database.
+2.  `"reason"`: A concise, user-facing string (in Traditional Chinese) explaining WHY this meme is a good suggestion for the current context.
+
+**Example of a valid response for 2 options:**
+```json
+[
+  {
+    "id": "mygo_01",
+    "reason": "這張圖很適合用來表達對話中提到的困惑或不解。"
+  },
+  {
+    "id": "mygo_25",
+    "reason": "可以用這張迷因來輕鬆地表示同意，緩和氣氛。"
+  }
+]
+```
+
+""";
 
     return _generateFromStream<List<MemeSuggestion>>(
-      content: content,
+      content: [Content.text(prompt)],
       cancellationToken: cancellationToken,
-      parser: (fullText) {
-        final jsonRegex = RegExp(r'\[.*\]', dotAll: true);
-        final match = jsonRegex.firstMatch(fullText);
-        if (match == null) {
-          throw FormatException(
-            "No valid JSON array found in AI response. Response: $fullText",
-          );
-        }
-        final jsonString = match.group(0)!;
-        final List<dynamic> parsedJson = jsonDecode(jsonString);
-        final List<MemeSuggestion> suggestions =
-            parsedJson
-                .map((item) {
-                  if (item is Map<String, dynamic> &&
-                      item.containsKey('id') &&
-                      item.containsKey('reason')) {
-                    return MemeSuggestion(
-                      imagePath: 'assets/images/basic/${item['id']}.jpg',
-                      reason: item['reason'],
-                    );
-                  }
-                  return null;
-                })
-                .whereType<MemeSuggestion>()
-                .toList();
-
-        if (suggestions.isEmpty) {
-          throw Exception(
-            "Parsed suggestions list is empty, despite receiving a response.",
-          );
-        }
-        return suggestions;
-      },
+      parser: (fullText) => MemeSuggestion.parseSuggestions(fullText),
     );
   }
 

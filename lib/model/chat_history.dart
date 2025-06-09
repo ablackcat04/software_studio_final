@@ -26,8 +26,8 @@ class ChatHistory {
 
   String get title => name;
 
-  void setImage(Uint8List _imageBytes) {
-    imageBytes = _imageBytes;
+  void setImage(Uint8List imageBytes) {
+    this.imageBytes = imageBytes;
   }
 
   void setGuide(String newGuide) {
@@ -46,14 +46,13 @@ class ChatHistory {
   Future<void> renameHistory({
     required CancellationToken cancellationToken,
   }) async {
-    final AiSuggestionService _aiService = AiSuggestionService();
-    name = await _aiService.nameHistory(
+    final AiSuggestionService aiService = AiSuggestionService();
+    name = await aiService.nameHistory(
       history: toPromptString(),
       cancellationToken: cancellationToken,
     );
   }
 
-  // In ChatHistory
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -94,15 +93,20 @@ class ChatHistory {
       hasSetup: hasSetup ?? this.hasSetup,
     );
   }
+
+  List<String> get imagePaths {
+    return messages
+        .expand((message) => message.suggestions?.map((suggestion) => suggestion.imagePath) ?? <String>[])
+        .toList();
+  }
 }
 
 class ChatMessage {
-  ChatMessage({required this.isAI, required this.content, this.suggestions});
-
   bool isAI;
   String content;
-  // List<String>? images;
   List<MemeSuggestion>? suggestions;
+
+  ChatMessage({required this.isAI, required this.content, this.suggestions});
 
   List<MemeSuggestion>? getSuggestions() {
     return suggestions;

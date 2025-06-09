@@ -239,16 +239,17 @@ class _ChatPageState extends State<ChatPage> {
       );
       _scrollToBottom(); // 滾動到最下面
 
-      final List<MemeSuggestion>
-      suggestions = await _aiService.getMemeSuggestions(
-        guide:
-            guide ??
-            'no guide now, please throw invalid result to warn the developer',
+      // Define hiddenPictures as an empty list or retrieve from state if needed
+      final hiddenPictures = settingsNotifier.settings.hiddenPictures;
+
+      final List<MemeSuggestion> suggestions = await _aiService.getMemeSuggestions(
+        guide: guide ?? 'no guide now, please throw invalid result to warn the developer',
         userInput: userInput,
         aiMode: currentAIMode,
         optionNumber: optionNumber,
         notifier: chatHistoryNotifier,
-        cancellationToken: _cancellationToken!, // Pass the token
+        cancellationToken: _cancellationToken!,
+        hiddenPictures: hiddenPictures, // 传递 bool 类型的 hiddenPictures
       );
 
       chatHistoryNotifier.addMessage(
