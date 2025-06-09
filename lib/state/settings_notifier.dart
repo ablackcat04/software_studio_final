@@ -5,7 +5,7 @@ class SettingsNotifier extends ChangeNotifier {
   Settings _settings = Settings(
     optionNumber: 4,
     myFavorite: true,
-    hiddenPictures: false,
+    hiddenPictures: false, // 初始化 hiddenPictures
     privacyPolicy: true,
     isDarkTheme: false,
   );
@@ -24,6 +24,11 @@ class SettingsNotifier extends ChangeNotifier {
   
   void setTheme(bool value) {
     _settings.isDarkTheme = value;
+    notifyListeners();
+  }
+
+  void setHiddenPictures(bool value) {
+    _settings.hiddenPictures = value;
     notifyListeners();
   }
 
