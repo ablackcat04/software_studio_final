@@ -8,8 +8,8 @@ import 'package:software_studio_final/widgets/favorite_button.dart';
 // DATA MODEL: Represents a single meme document from Firestore
 // -------------------------------------------------------------------
 class MemeTemplate {
-  final String id; // The document ID (e.g., "99")
-  final String path; // The asset path (e.g., "assets/images/basic/99.jpg")
+  final String id;
+  final String path;
   final int usedTimes;
 
   MemeTemplate({required this.id, required this.path, required this.usedTimes});

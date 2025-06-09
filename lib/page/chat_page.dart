@@ -159,8 +159,10 @@ class _ChatPageState extends State<ChatPage> {
       listen: false,
     );
 
-    final userInput = _textController.text.trim();
-    if (userInput.isEmpty) return;
+    String userInput = _textController.text.trim();
+    if (userInput.isEmpty) {
+      userInput = '再來';
+    }
 
     chatHistoryNotifier.addMessage(
       ChatMessage(isAI: false, content: userInput),

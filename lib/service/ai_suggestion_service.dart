@@ -185,6 +185,7 @@ $history
       parser:
           (fullText) =>
               fullText.trim(), // The parser just returns the full text.
+      modelName: 'gemini-2.0-flash',
     );
   }
 
@@ -207,6 +208,7 @@ You are an intelligent chat history analyzer.
 Your task is to determine if the user's focus or intention in the conversation has shifted enough to require generating a new "Meme Suggestion Guide".
 Your primary task is to analyze the conversation screenshot provided earlier and determine if the user's focus or intention has shifted enough to require generating a new "Meme Suggestion Guide".
 
+**Impartant**: This should be fast since speed is crucial in this task.
 **Important**: The conversation screenshot is the primary context for analysis. User input should only be used to refine or clarify the suggestions, not to override the original context.
 
 Analyze the provided chat history.
@@ -253,6 +255,7 @@ $history
               "Analysis failed: No intention provided.",
         );
       },
+      modelName: 'gemini-2.0-flash',
     );
   }
 
@@ -492,11 +495,11 @@ Each object represents a single meme suggestion and MUST have two keys:
 ```json
 [
   {
-    "id": "mygo_01",
+    "id": "1",
     "reason": "這張圖很適合用來表達對話中提到的困惑或不解。"
   },
   {
-    "id": "mygo_25",
+    "id": "25",
     "reason": "可以用這張迷因來輕鬆地表示同意，緩和氣氛。"
   }
 ]
