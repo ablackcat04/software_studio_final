@@ -1,0 +1,23 @@
+# .gcloudignore
+
+# This file tells the gcloud CLI which files to ignore when deploying.
+# It's like .gitignore, but for your deployment package.
+
+# Default ignores
+.gcloudignore
+.git
+.gitignore
+
+# Python virtual environment
+venv/
+.venv/
+
+# Local environment variables should NOT be deployed
+.env
+
+# The service account key should NOT be deployed
+service-account-key.json
+
+# Python cache files
+__pycache__/
+*.pyc
