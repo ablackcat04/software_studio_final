@@ -195,6 +195,7 @@ class _UploadPageState extends State<UploadPage> {
         optionNumber: optionNumber,
         notifier: chatHistoryNotifier,
         cancellationToken: _cancellationToken!, // Pass the token
+        settingsNotifier: settingsNotifier,
       );
 
       suggestions.map((suggestion) => suggestion.imagePath).toList();

@@ -14,7 +14,7 @@ OUTPUT_JSON_FILE = "meme_data.json"
 # 錯誤日誌檔案名稱：預設與腳本同目錄
 ERROR_LOG_FILE = "error_log.txt"
 # 使用的 Gemini 模型名稱
-MODEL_NAME = "gemini-2.5-flash-preview-04-17" # 或其他你指定的 preview 版本，例如 "gemini-1.5-flash-preview-0514"
+MODEL_NAME = "gemini-2.5-pro-preview-06-05" # 或其他你指定的 preview 版本，例如 "gemini-1.5-flash-preview-0514"
 # 儲存 Google Gemini API 金鑰的環境變數名稱
 API_KEY_ENV_VAR = "GOOGLE_API_KEY"
 
@@ -23,7 +23,7 @@ API_KEY_ENV_VAR = "GOOGLE_API_KEY"
 # 即使是批次請求，也建議設定一個延遲。
 BATCH_REQUEST_DELAY_SECONDS = 1 # 每次處理完一個批次後等待的秒數
 # 每次運行腳本時一個批次最多處理的新圖片數量
-MAX_IMAGES_PER_RUN = 30
+MAX_IMAGES_PER_RUN = 25
 
 # Prompt (已修改以適應多圖輸入和單一包含多個ID的JSON輸出)
 SYSTEM_PROMPT_MULTI_IMAGE = """
@@ -61,18 +61,7 @@ Detailed Instructions for each field within the value object (these apply to the
 
 2.  `角色` (Character(s)):
     *   Type: Array of Strings.
-    *   Content: Identify the character(s) appearing in the meme. You **must** use only the names from the provided list below.
-    *   Character List (Name (Hair Color/Distinguishing Features)):
-        *   `高松燈` (深紫色or灰色頭髮)
-        *   `千早愛音` (粉色頭髮)
-        *   `椎名立希` (黑色頭髮)
-        *   `長崎爽世` (棕色頭髮)
-        *   `要樂奈` (白色頭髮)
-        *   `若葉睦` (淺綠色頭髮)
-        *   `豐川祥子` (淺藍色頭髮)
-        *   `三角初華` (淺黃色頭髮)
-        *   `八幡海玲` (黑色頭髮)
-        *   `若天寺若麥` (紫色頭髮、穿著較高松燈時尚、幾乎不會穿校服)
+    *   Content: Identify the character(s) appearing in the meme.
     *   Consider the impact of lighting/art style on hair color when making your identification.
     *   If multiple characters from the list are present, include all their names in the array.
     *   If no characters from the list are identifiable, or if the characters are not on this list, use an empty array (`[]`).

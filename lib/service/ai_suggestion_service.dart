@@ -4,19 +4,26 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:software_studio_final/state/chat_history_notifier.dart';
-import 'package:http/http.dart' as http; // Add this import at the top
+import 'package:http/http.dart' as http;
+import 'package:software_studio_final/state/settings_notifier.dart'; // Add this import at the top
 
 /// Represents a single meme retrieved from the RAG (semantic search) step.
 class _FilteredMemeResult {
   final String id;
   final String description;
+  final String folderName;
 
-  _FilteredMemeResult({required this.id, required this.description});
+  _FilteredMemeResult({
+    required this.id,
+    required this.description,
+    required this.folderName,
+  });
 
   factory _FilteredMemeResult.fromJson(Map<String, dynamic> json) {
     return _FilteredMemeResult(
       id: json['id'] as String,
       description: json['description'] as String,
+      folderName: json['folderName'] as String,
     );
   }
 }
@@ -290,7 +297,9 @@ Ensure the generated intentions are distinct within each category and plausible 
 
     final content = [
       Content.multi([
-        TextPart('$imageAnalysisPrompt\n\nHere is some conclusion of the user\'s intention: \n$intension'),
+        TextPart(
+          '$imageAnalysisPrompt\n\nHere is some conclusion of the user\'s intention: \n$intension',
+        ),
         DataPart(mimeType ?? 'image/jpeg', imageBytes!),
       ]),
     ];
@@ -306,17 +315,17 @@ Ensure the generated intentions are distinct within each category and plausible 
     required String query,
     required CancellationToken cancellationToken,
     required int amount,
+    required List<String> enabledFolders, // <<< ADD THIS PARAMETER
   }) async {
     if (_ragFunctionUrl.isEmpty) {
       throw Exception("RAG_FUNCTION_URL not found in .env file.");
     }
 
-    // Use a Completer to make the http call cancellable.
     final completer = Completer<List<_FilteredMemeResult>>();
     final client = http.Client();
 
     cancellationToken.onCancel(() {
-      client.close(); // This will cancel the ongoing HTTP request.
+      client.close();
       if (!completer.isCompleted) {
         completer.completeError(
           CancellationException("RAG search was cancelled."),
@@ -330,21 +339,25 @@ Ensure the generated intentions are distinct within each category and plausible 
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'query': query,
-          'top_k': amount, // Retrieve the top 15 semantically similar memes
+          'top_k': amount,
+          'enabled_folders': enabledFolders, // <<< ADD THIS LINE
         }),
       );
 
       if (cancellationToken.isCancellationRequested) {
-        return completer
-            .future; // The completer will throw a CancellationException.
+        return completer.future;
       }
 
       if (response.statusCode == 200) {
-        final List<dynamic> resultsJson = json.decode(response.body);
+        // Use utf8.decode to handle non-ASCII characters correctly
+        final List<dynamic> resultsJson = json.decode(
+          utf8.decode(response.bodyBytes),
+        );
         final results =
-            resultsJson
-                .map((json) => _FilteredMemeResult.fromJson(json))
-                .toList();
+            resultsJson.map((json) {
+              // The json from python will have 'folderName', so this will now work.
+              return _FilteredMemeResult.fromJson(json);
+            }).toList();
         completer.complete(results);
       } else {
         throw Exception(
@@ -369,22 +382,23 @@ Ensure the generated intentions are distinct within each category and plausible 
     required int optionNumber,
     required ChatHistoryNotifier notifier,
     required CancellationToken cancellationToken,
+    required SettingsNotifier settingsNotifier,
   }) async {
     if (guide.isEmpty) {
       throw Exception("AI Guide is empty. Cannot get suggestions.");
     }
 
-    // ===== STEP 1: RETRIEVE (RAG) =====
-    // Create a rich query for the semantic search.
     final ragQuery =
         "Based on this context: $guide\nThe user's immediate request is: $userInput";
 
-    // Call the Cloud Function to get the top 25 most relevant memes.
+    // <<< CHANGE >>> Pass the enabled folders to the RAG function.
     final List<_FilteredMemeResult> relevantMemes =
         await _findRelevantMemesViaRAG(
           query: ragQuery,
           cancellationToken: cancellationToken,
           amount: optionNumber * 4,
+          enabledFolders:
+              settingsNotifier.enabledFolders.toList(), // <<< PASS FOLDERS HERE
         );
 
     if (relevantMemes.isEmpty) {
@@ -393,18 +407,11 @@ Ensure the generated intentions are distinct within each category and plausible 
       );
     }
 
-    // ===== STEP 2 & 3: AUGMENT & GENERATE =====
-    // Build a focused system prompt with ONLY the relevant memes.
     final systemPrompt = await _buildSystemPrompt(
       mode: aiMode,
       optionNumber: optionNumber,
-      relevantMemes: relevantMemes, // Pass the filtered list
+      relevantMemes: relevantMemes,
     );
-
-    print(systemPrompt);
-    for (final a in relevantMemes) {
-      print(a.id.toString() + a.description);
-    }
 
     final history = notifier.currentChatHistory.toPromptString();
     final userRequestPrompt =
@@ -414,7 +421,6 @@ Ensure the generated intentions are distinct within each category and plausible 
       Content.multi([TextPart(systemPrompt), TextPart(userRequestPrompt)]),
     ];
 
-    // The rest of the function remains the same, but now it operates on a much smaller, more relevant context.
     return _generateFromStream<List<MemeSuggestion>>(
       content: content,
       cancellationToken: cancellationToken,
@@ -428,15 +434,38 @@ Ensure the generated intentions are distinct within each category and plausible 
         }
         final jsonString = match.group(0)!;
         final List<dynamic> parsedJson = jsonDecode(jsonString);
+
+        // <<< NEW LOGIC TO BUILD DYNAMIC PATHS >>>
+        // Create a lookup map to find the folder name for a given meme ID.
+        // This is efficient and robust.
+        final memeFolderMap = {
+          for (var meme in relevantMemes) meme.id: meme.folderName,
+        };
+
         final List<MemeSuggestion> suggestions =
             parsedJson
                 .map((item) {
                   if (item is Map<String, dynamic> &&
                       item.containsKey('id') &&
                       item.containsKey('reason')) {
+                    final String id = item['id'];
+                    // Look up the folder name using the ID from the AI's response.
+                    final String? folderName = memeFolderMap[id];
+
+                    // If the folder is found, construct the dynamic path.
+                    // Otherwise, fall back to a default path to prevent errors.
+                    String imagePath;
+                    if (folderName != null) {
+                      imagePath =
+                          (folderName == 'mygo')
+                              ? 'assets/images/$folderName/$id.jpg'
+                              : 'assets/images/$folderName/$id.png';
+                    } else {
+                      imagePath = 'assets/images/basic/$id.jpg';
+                    }
+
                     return MemeSuggestion(
-                      // We construct the local path here using the ID from the response.
-                      imagePath: 'assets/images/basic/${item['id']}.jpg',
+                      imagePath: imagePath,
                       reason: item['reason'],
                     );
                   }

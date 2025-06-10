@@ -251,6 +251,7 @@ class _ChatPageState extends State<ChatPage> {
         optionNumber: optionNumber,
         notifier: chatHistoryNotifier,
         cancellationToken: _cancellationToken!, // Pass the token
+        settingsNotifier: settingsNotifier,
       );
 
       chatHistoryNotifier.addMessage(
