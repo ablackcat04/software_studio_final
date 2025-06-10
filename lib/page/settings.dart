@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:software_studio_final/model//settings.dart';
+import 'package:software_studio_final/model/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     final settingsNotifier = Provider.of<SettingsNotifier>(
@@ -17,12 +17,12 @@ class SettingsPage extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // 點擊 TextField 以外的地方時關閉鍵盤
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
         appBar: AppBar(title: Text('Settings')),
         body: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           children: [
             ListTile(
               title: Text('Dark Theme'),
@@ -32,10 +32,11 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ListTile(
-              title: Text('Suggestion Amount(Once)'),
+              title: Text('Suggestion Amount (Once)'),
               trailing: SizedBox(
                 width: 60,
                 child: TextFormField(
+                  textAlign: TextAlign.center, // Center the text
                   keyboardType: TextInputType.number,
                   initialValue: settings.optionNumber.toString(),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -55,18 +56,57 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
-            /* 添加 Hidden Pictures 按鈕
-            ListTile(
-              title: Text('Hidden Pictures'),
-              trailing: Switch(
-                value: settings.hiddenPictures,
-                onChanged: (bool value) {
-                  settingsNotifier.setHiddenPictures(value);
-                },
+
+            // --- NEW FOLDER SELECTION UI ---
+            const Divider(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Meme Folders',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),*/
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Wrap(
+                spacing: 8.0, // Horizontal space between chips
+                runSpacing: 4.0, // Vertical space between lines of chips
+                children: [
+                  _buildFolderChip('All', 'all', settingsNotifier),
+                  _buildFolderChip('MyGo', 'mygo', settingsNotifier),
+                  _buildFolderChip('Popular', 'popular', settingsNotifier),
+                ],
+              ),
+            ),
+
+            // --- END OF NEW UI ---
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper widget to create a FilterChip, avoiding code repetition.
+  Widget _buildFolderChip(
+    String label,
+    String folderId,
+    SettingsNotifier notifier,
+  ) {
+    final bool isSelected = notifier.settings.enabledFolders.contains(folderId);
+
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) {
+        // The boolean value from onSelected is not needed here
+        notifier.toggleFolder(folderId);
+      },
+      // Optional: Style the chip to look better
+      selectedColor: Colors.blue.withAlpha(50),
+      checkmarkColor: Colors.blue,
+      shape: StadiumBorder(
+        side: BorderSide(color: isSelected ? Colors.blue : Colors.grey),
       ),
     );
   }
