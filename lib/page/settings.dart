@@ -75,7 +75,7 @@ class SettingsPage extends StatelessWidget {
                 children: [
                   _buildFolderChip('All', 'all', settingsNotifier),
                   _buildFolderChip('MyGo', 'mygo', settingsNotifier),
-                  _buildFolderChip('Popular', 'popular', settingsNotifier),
+                  _buildFolderChip('Spongebob', 'spongebob', settingsNotifier),
                 ],
               ),
             ),

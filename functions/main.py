@@ -1,3 +1,5 @@
+# main.py
+
 import os
 import json
 from dotenv import load_dotenv
@@ -7,80 +9,70 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from firebase_functions import https_fn
 
-load_dotenv()
-
-
-# ======================================================================
-#                     THE FINAL INITIALIZATION BLOCK
-# ======================================================================
-# This is the simplest possible way to initialize. It will work for
-# local analysis AND when deployed to the cloud.
-
-# Check if the app is already initialized to be absolutely safe.
+# ... (your other initializations) ...
 if not firebase_admin._apps:
-    # Use the service account key directly.
-    # The Firebase environment will automatically find this when deployed.
     cred = credentials.Certificate('service-account-key.json')
     firebase_admin.initialize_app(cred)
-
-# Initialize services
 db = firestore.client()
-# Use configured secrets for the API key
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def cosine_sim(a, b):
-    # Ensure vectors are numpy arrays for calculations
     a = np.array(a)
     b = np.array(b)
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-@https_fn.on_request() # REMOVED the secrets parameter
-def find_similar_memes(req: https_fn.Request) -> https_fn.Response:
-    """HTTPS Cloud Function to find memes based on semantic similarity."""
-    
-    # Allow CORS for requests from any origin (useful for local Flutter web testing)
-    headers = {
-        "Access-Control-Allow-Origin": "*"
-    }
 
-    # Handle preflight CORS requests for web
+# <<< START OF CORRECTED FUNCTION >>>
+@https_fn.on_request()
+def find_similar_memes_v2(req: https_fn.Request) -> https_fn.Response:
+    
+    # --- This CORS handling part is still correct and necessary ---
     if req.method == "OPTIONS":
-        options_headers = {
+        headers = {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
             "Access-Control-Max-Age": "3600",
         }
-        return https_fn.Response("", headers=options_headers, status=204)
+        return https_fn.Response("", headers=headers, status=204)
 
+    headers = { "Access-Control-Allow-Origin": "*" }
+
+    # --- The main logic with the fix ---
     try:
-        body = req.get_json()
+        # <<< THIS IS THE FIX >>>
+        # Use force=True to bypass strict header checking and ensure the body is parsed as JSON.
+        body = req.get_json(force=True) 
+        
         query = body.get("query")
         if not query:
             return https_fn.Response("Missing 'query' in request body.", status=400, headers=headers)
 
+        # ... The rest of your function logic is correct and does not need to change ...
         top_k = body.get("top_k", 25)
+        enabled_folders = body.get("enabled_folders")
+        
+        if not enabled_folders or 'all' in enabled_folders:
+            enabled_folders = ['mygo', 'popular']
 
-        # 1. Get embedding for the user's query
         response = client.embeddings.create(input=query, model="text-embedding-ada-002")
         query_embedding = response.data[0].embedding
 
-        # 2. Fetch all memes' data from Firestore
-        memes_ref = db.collection("memes").stream()
-        
-        # 3. Calculate similarities in memory
+        memes_query = db.collection_group("items").where('folder_id', 'in', enabled_folders)
+
         sims = []
-        for meme_doc in memes_ref:
+        for meme_doc in memes_query.stream():
             meme_data = meme_doc.to_dict()
             if "embedding" in meme_data and "id" in meme_data:
                 similarity = cosine_sim(query_embedding, meme_data["embedding"])
+                folder_name = meme_doc.reference.parent.parent.id
                 sims.append({
                     "id": meme_data["id"],
                     "description": meme_data.get("description", ""),
                     "score": similarity,
+                    "folderName": folder_name,
                 })
 
-        # 4. Sort and return the top results
         top_results = sorted(sims, key=lambda x: x["score"], reverse=True)[:top_k]
         
         return https_fn.Response(json.dumps(top_results), mimetype="application/json", headers=headers)
