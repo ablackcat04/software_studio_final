@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:software_studio_final/model//meme.dart';
 
 class MemeNotifier extends ChangeNotifier {
-  final List<Meme> _memes = [];
+  List<Meme> _memes = [];
 
   List<Meme> get memes => _memes;
 

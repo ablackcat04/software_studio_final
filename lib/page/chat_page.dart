@@ -1,5 +1,4 @@
-import 'package:software_studio_final/model/chat.dart'; // For ChatMessage, ChatHistory
-import 'package:software_studio_final/state/current_chat_notifier.dart';
+import 'package:software_studio_final/model/chat_history.dart'; // For ChatMessage, ChatHistory
 import 'package:software_studio_final/state/guide_notifier.dart';
 import 'package:software_studio_final/widgets/chat/ai_message.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
@@ -7,8 +6,12 @@ import 'package:software_studio_final/widgets/chat/message_input.dart';
 import 'package:software_studio_final/widgets/chat/user_message.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:software_studio_final/state/chat_history_notifier.dart';
+import 'package:software_studio_final/widgets/custom_drawer.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -42,12 +45,17 @@ enum MainState {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _pageController = PageController(
+    initialPage: 0,
+  ); // Assuming ChatPage is page 0
+
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   // final List<Map<String, dynamic>> _messages = []; // Replaced by ChatHistoryNotifier
   // final List<List<Map<String, dynamic>>> _chatHistory = []; // Replaced by ChatHistoryNotifier
 
-  // final Set<String> _likedImages = {}; // For AIMessage interactions
+  final Set<String> _likedImages = {}; // For AIMessage interactions
   // bool _isAllSelected = true; // Example state for drawer/filtering
   // bool _isMygoSelected = false;
   // bool _isFavoriteSelected = false;
@@ -63,16 +71,19 @@ class _ChatPageState extends State<ChatPage> {
     // Ensure a chat history exists when the page loads
     // Needs to be done after the first frame to access Provider safely if ChatHistoryNotifier auto-creates.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentChatNotifier = Provider.of<CurrentChatNotifier>(
+      final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
         context,
         listen: false,
       );
+      if (chatHistoryNotifier.chatHistory.isEmpty) {
+        chatHistoryNotifier.newChat(); // Create initial chat session
+      }
       // If starting blank, set state, otherwise could be conversation
       // This depends on how you want to resume chats.
       // For now, new instance of ChatPage starts blank.
-      // If currentChatNotifier.currentChatHistory.messages.isNotEmpty,
+      // If chatHistoryNotifier.currentChatHistory.messages.isNotEmpty,
       // you might want to set mstate = MainState.conversation.
-      if (currentChatNotifier.currentChatId == null) {
+      if (chatHistoryNotifier.currentChatHistory.messages.isEmpty) {
         setState(() {
           mstate = MainState.blank;
         });
@@ -89,6 +100,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _scrollController.dispose();
     _textController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -101,6 +113,27 @@ class _ChatPageState extends State<ChatPage> {
           curve: Curves.easeOut,
         );
       }
+    });
+  }
+
+  void _copyOnTap(String imagePath) {
+    // Implement copy logic (e.g., Clipboard.setData)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied $imagePath to clipboard!'), // Placeholder
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _toggleLike(String imagePath) {
+    setState(() {
+      if (_likedImages.contains(imagePath)) {
+        _likedImages.remove(imagePath);
+      } else {
+        _likedImages.add(imagePath);
+      }
+      // Persist liked images if necessary (e.g., via SettingsNotifier or other service)
     });
   }
 
@@ -136,7 +169,7 @@ Thinking should be concise since speed is critical in this task.
   Future<void> _onSendPressed() async {
     // For sending text messages and getting image suggestions
     if (_isLoading) return;
-    final currentChatNotifier = Provider.of<CurrentChatNotifier>(
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
       context,
       listen: false,
     );
@@ -144,7 +177,7 @@ Thinking should be concise since speed is critical in this task.
 
     if (userInput.isEmpty) return;
 
-    currentChatNotifier.addMessage(
+    chatHistoryNotifier.addMessage(
       ChatMessage(isAI: false, content: userInput),
     );
     _textController.clear();
@@ -158,7 +191,7 @@ Thinking should be concise since speed is critical in this task.
     _scrollToBottom(); // Scroll after user message is added
 
     // Prepare past inputs for context (optional, depending on Gemini prompt needs)
-    // String pastInputs = currentChatNotifier.currentChatHistory.messages
+    // String pastInputs = chatHistoryNotifier.currentChatHistory.messages
     //     .where((m) => !m.isAI)
     //     .map((m) => m.content)
     //     .join('\n');
@@ -179,7 +212,7 @@ Thinking should be concise since speed is critical in this task.
 
       final guideContext = guide;
       final userRequestPart = TextPart(
-        "This is the guide, $guideContext\nThe user typed: \"$userInput\". Current AI Mode: '$_currentAIMode'. Provide 4 image IDs based on this.",
+        "This is the guide, ${guideContext}\nThe user typed: \"$userInput\". Current AI Mode: '$_currentAIMode'. Provide 4 image IDs based on this.",
       );
 
       final content = [
@@ -207,11 +240,11 @@ Thinking should be concise since speed is critical in this task.
             lines.map((number) => 'images/basic/$number.jpg').toList();
 
         if (imagePaths.isNotEmpty) {
-          currentChatNotifier.addMessage(
+          chatHistoryNotifier.addMessage(
             ChatMessage(isAI: true, content: "給你的梗圖建議:", images: imagePaths),
           );
         } else {
-          currentChatNotifier.addMessage(
+          chatHistoryNotifier.addMessage(
             ChatMessage(
               isAI: true,
               content: "無法解析AI回覆中的圖片建議。原始回覆: $aiResponseText",
@@ -219,17 +252,14 @@ Thinking should be concise since speed is critical in this task.
           );
         }
       } else {
-        currentChatNotifier.addMessage(
+        chatHistoryNotifier.addMessage(
           ChatMessage(isAI: true, content: 'AI沒有回覆，可能無法理解請求。'),
         );
       }
     } catch (e) {
       print('Error in _onSendPressed with Gemini: $e');
-      currentChatNotifier.addMessage(
-        ChatMessage(
-          isAI: true,
-          content: 'AI回覆時發生錯誤：\n${e.toString()}',
-        ),
+      chatHistoryNotifier.addMessage(
+        ChatMessage(isAI: true, content: 'AI回覆時發生錯誤：\n${e.toString()}'),
       );
       if (mounted) {
         ScaffoldMessenger.of(
@@ -245,11 +275,73 @@ Thinking should be concise since speed is critical in this task.
     }
   }
 
+  void _onNewChatPressed() {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+    chatHistoryNotifier.newChat();
+    Provider.of<GuideNotifier>(context, listen: false);
+    setState(() {
+      mstate = MainState.blank; // Start new chat in blank state
+      _textController.clear();
+    });
+    _pageController.jumpToPage(0); // If this page is part of a PageView
+    if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+      Navigator.of(context).pop(); // Close drawer
+    }
+  }
+
+  void _handleHistorySelection(BuildContext context, int index) {
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+    chatHistoryNotifier.switchCurrentByIndex(index);
+    // Determine state based on selected history. For simplicity, assume conversation.
+    // More complex logic might be needed to restore 'guide' if applicable.
+    setState(() {
+      mstate = MainState.conversation;
+      _textController.clear();
+    });
+    _pageController.jumpToPage(0);
+    if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+      Navigator.of(context).pop(); // Close drawer
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final messages = context.select<CurrentChatNotifier, List>(
-      (notifier) => notifier.currentChat?.messages ?? [],
-    );
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(context);
+    // Ensure notifier has a current chat, especially on first load or after all chats deleted.
+    if (chatHistoryNotifier.chatHistory.isEmpty) {
+      // This can happen if all chats are deleted.
+      // We might show a "No chats, start a new one" message or auto-create.
+      // For now, let's rely on initState to create one if empty.
+      // If still no chat, show a fallback.
+      return Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(title: const Text("Meme AI Chat")),
+        drawer: CustomDrawer(
+          // onNewChat: _onNewChatPressed,
+          onHistoryItemSelected: (idx) => _handleHistorySelection(context, idx),
+          // Pass other necessary props like isAllSelected etc.
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Please start a new chat from the drawer."),
+              ElevatedButton(
+                onPressed: _onNewChatPressed,
+                child: Text("New Chat"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final messages = chatHistoryNotifier.currentChatHistory.messages;
 
     return Column(
       children: [

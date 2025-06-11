@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:software_studio_final/model/chat.dart';
+import 'package:software_studio_final/model/chat_history.dart';
+import 'package:software_studio_final/state/chat_history_notifier.dart';
 import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/chat/go_button.dart';
 import 'package:software_studio_final/widgets/chat/ai_mode_switch.dart';
@@ -43,14 +44,14 @@ class _GoPageState extends State<GoPage> {
     );
 
     // 模擬進入聊天畫面
-    // final currentChatNotifier = Provider.of<CurrentChatNotifier>(
-    //   context,
-    //   listen: false,
-    // );
-    // currentChatNotifier.addMessage(
-    //   ChatMessage(isAI: true, content: '這是AI的回覆', images: images),
-    // );
-    // currentChatNotifier.currentSetup();
+    final chatHistoryNotifier = Provider.of<ChatHistoryNotifier>(
+      context,
+      listen: false,
+    );
+    chatHistoryNotifier.addMessage(
+      ChatMessage(isAI: true, content: '這是AI的回覆', images: images),
+    );
+    chatHistoryNotifier.currentSetup();
 
     // 切換到聊天畫面
     Navigator.pushNamed(context, '/chat');
