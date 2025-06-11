@@ -27,8 +27,9 @@ class ChatListNotifier extends ChangeNotifier {
     );
     _chats.insert(0, newChatMeta);
 
-    Hive.openBox('chat_meta').then((box) {
-      box.put(newChatMeta.id, newChatMeta.toMap());
+    Hive.openBox('chat_meta').then((onValue) async {
+      final box = await Hive.openBox('chat_meta');
+      await box.put(newChatMeta.id, newChatMeta.toMap());
     });
 
     notifyListeners();
@@ -36,7 +37,8 @@ class ChatListNotifier extends ChangeNotifier {
   }
 
   void removeChat(String id) {
-    Hive.openBox('chat_meta').then((box) async {
+    Hive.openBox('chat_meta').then((onValue) async {
+      final box = await Hive.openBox('chat_meta');
       await box.delete(id);
     });
     _chats.removeWhere((chat) => chat.id == id);

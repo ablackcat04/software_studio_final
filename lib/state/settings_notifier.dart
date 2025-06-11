@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:software_studio_final/model/settings.dart';
+import 'package:software_studio_final/model//settings.dart';
 
 class SettingsNotifier extends ChangeNotifier {
   Settings _settings = Settings(
@@ -13,26 +12,6 @@ class SettingsNotifier extends ChangeNotifier {
 
   Settings get settings => _settings;
 
-  SettingsNotifier() {
-    loadSettings();
-  }
-
-  void loadSettings() async {
-    final box = await Hive.openBox('settings');
-    if (box.isNotEmpty) {
-      _settings = Settings.fromMap(
-        Map<String, dynamic>.from(box.get("settings")),
-      );
-    }
-    notifyListeners();
-  }
-
-  void save() async {
-    print("Saving settings: ${_settings.toMap()}");
-    final box = await Hive.openBox('settings');
-    box.put("settings", _settings.toMap());
-  }
-
   void setSettings(Settings settings) {
     _settings = settings;
     notifyListeners();
@@ -42,10 +21,13 @@ class SettingsNotifier extends ChangeNotifier {
     _settings.optionNumber = value;
     notifyListeners();
   }
-
+  
   void setTheme(bool value) {
     _settings.isDarkTheme = value;
     notifyListeners();
   }
 
+  int getoptionnumbers() {
+    return _settings.optionNumber;
+  }
 }

@@ -6,13 +6,13 @@ class Meme {
     required this.category,
   });
 
-  int id;
+  String id;
   bool isFavorite;
   int popularity;
   String category;
 
   Meme copyWith({
-    int? id,
+    String? id,
     bool? isFavorite,
     int? popularity,
     String? category,

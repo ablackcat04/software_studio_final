@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:software_studio_final/page/chat_page.dart';
 import 'package:software_studio_final/page/upload_page.dart';
 import 'package:software_studio_final/state/current_chat_notifier.dart';
-import 'package:software_studio_final/state/settings_notifier.dart';
 import 'package:software_studio_final/widgets/custom_drawer.dart';
 
 class MainScreen extends StatefulWidget {
@@ -15,25 +14,11 @@ class MainScreen extends StatefulWidget {
 
 enum MainState { blank, uploaded, conversation }
 
-class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
+class _MainScreenState extends State<MainScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+  dispose() {
+    context.read<CurrentChatNotifier>().clear();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      context.read<CurrentChatNotifier>().save();
-      context.read<SettingsNotifier>().save();
-    }
   }
 
   @override
