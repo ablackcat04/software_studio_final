@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:software_studio_final/state/favorite_notifier.dart';
-import 'package:software_studio_final/widgets/favorite_button.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({super.key});
@@ -38,33 +37,25 @@ class FavoritePage extends StatelessWidget {
                         // 圖片部分
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8.0),
-                          child:
-                              item.imageUrl.startsWith('http')
-                                  ? Image.network(
-                                    item.imageUrl,
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    height:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    fit: BoxFit.cover,
-                                  )
-                                  : // 如果是本地圖片，使用 AssetImage
-                                  // 注意：這裡的路徑需要根據實際情況調整
-                                  Image.asset(
-                                    item.imageUrl,
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    height:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    fit: BoxFit.cover,
-                                  ),
+                          child: Image.network(
+                            'assets/${item.imageUrl}',
+                            width: MediaQuery.of(context).size.width * 0.6,
+                            height: MediaQuery.of(context).size.width * 0.6,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        // 收藏按鈕
-                        FavoriteButton(
-                          id: item.id,
-                          imageUrl: item.imageUrl,
-                          title: item.title,
+                        // 文字部分
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
